@@ -71,3 +71,6 @@ clean: ## Remove caches and build artifacts (never data/)
 
 data: require-venv ## Generate synthetic dirty supplier feeds (F01)
 	$(PY) -m src.generate.make_dirty_data
+
+ingest: require-venv ## Raw feeds → DuckDB bronze (F02)
+	$(PY) -m src.ingest.load_bronze

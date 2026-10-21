@@ -16,14 +16,14 @@ The story: dirty feeds → ingest → quality gate → clean catalog → AlloyDB
 |---|---|---|---|---|
 | F00 | Foundation & dev env | — | done | 5/5 |
 | F01 | Synthetic dirty supplier feeds | F00 | done | 2/2 |
-| F02 | Bronze ingestion | F01 | todo | 2 |
+| F02 | Bronze ingestion | F01 | done | 2/2 |
 | F03 | Data quality: contract, validate, quarantine | F02 | todo | 3 |
 | F04 | Clean catalog (gold) | F03 | todo | 2 |
 | F05 | AlloyDB + load + embeddings 🔴 | F04 | todo | 2 |
 | F06 | Hybrid search (vector + keyword RRF) | F05 | todo | 2 |
 | F07 | Streamlit search demo | F06 | todo | 1 |
 
-**Next up:** F02 — run `/skill:plan F02` (draft plan exists; review and approve).
+**Next up:** F03 — run `/skill:plan F03` (draft plan exists; review and approve).
 
 ---
 
