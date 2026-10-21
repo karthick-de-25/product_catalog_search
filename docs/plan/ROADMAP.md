@@ -16,7 +16,7 @@ Legend: 🔴 = feature will need Tier C (cloud/cost) approval during build.
 
 | ID | Feature | Depends on | Status | Slices |
 |---|---|---|---|---|
-| F00 | Foundation & dev environment | — | planned | 5 |
+| F00 | Foundation & dev environment | — | in-progress | 1/5 |
 | F01 | Synthetic dirty supplier feeds | F00 | planned | 5 |
 | F02 | Bronze ingestion & profiling | F01 | todo | 4 |
 | F03 | Data contracts, validation & quarantine | F02 | todo | 5 |
@@ -33,7 +33,7 @@ Legend: 🔴 = feature will need Tier C (cloud/cost) approval during build.
 | F14 | Streamlit app | F12, F13 | todo | 4 |
 | F15 | Feedback & observability | F13, F14 | todo | 3 |
 
-**Next up:** F00 — run `/skill:plan F00` (plan file already drafted; approve or amend it).
+**Next up:** F00 — approved. Run `/skill:implement F00`.
 
 ---
 

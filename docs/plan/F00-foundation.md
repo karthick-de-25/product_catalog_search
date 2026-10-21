@@ -1,9 +1,9 @@
 ---
 feature: F00
 title: Foundation & dev environment
-status: proposed
+status: approved
 owner: agent
-approved:
+approved: 2026-10-21
 created: 2026-10-21
 updated: 2026-10-21
 depends_on: []
@@ -26,15 +26,32 @@ lint/type/test loop. Getting this right first prevents rework and keeps slices s
 - Non-goals: any pipeline/business logic (generation, ingestion, quality, enrichment,
   search, RAG), any AlloyDB/GCP wiring, any dependency beyond dev tooling.
 
+## Bootstrap (one-time, before Slice 1)
+
+Scout verified this environment (2026-10-21): `Python 3.12.3`, `uv 0.12.1`, no `.venv`,
+`ruff`/`mypy` **not on the system PATH**, and a bare system `pytest` without our plugins.
+Therefore **every command in this feature runs inside `.venv`**, created once by:
+
+```bash
+uv venv .venv && uv pip install -r requirements.txt -r requirements-dev.txt
+```
+
+(or `make setup` once Slice 4 lands). Slices 1–3 use the raw commands because the Makefile
+does not exist yet; from Slice 4 onward, "green" means `make check` is green.
+
 ## Already present (created during repo setup — verify, don't recreate)
 - `.gitignore`, `.env.example`, `requirements.txt`, `requirements-dev.txt`
 - `AGENTS.md`, `CONTEXT.md`, `docs/plan/*`, `.pi/*`
+- `data/{raw,silver,gold,docs,quarantine,reports}/.gitkeep`, `tests/fixtures/.gitkeep`
 
 ## Assumptions
-- [ ] Python 3.11+ available — verify `python3 --version`; verified 3.12.3.
-- [ ] `uv` preferred, pip fallback — verify `which uv`.
+- [x] Python 3.11+ available — verified `Python 3.12.3`.
+- [x] `uv` available — verified `uv 0.12.1`; fallback `python -m venv` + `pip`.
 - [ ] Tool config in `pyproject.toml` is respected without an installable build backend —
-      verify `ruff check` / `mypy` / `pytest` read it from the repo root.
+      verify `ruff check` / `mypy src` / `pytest` run from the repo root in `.venv`.
+- [ ] Tools run against `.venv` (not system) so `mypy` can resolve third-party types.
+- [ ] `pytest` exits **5** (NO_TESTS_COLLECTED), not 0, when no tests exist; Slice 1 ships
+      one trivial test so the gate is genuinely green.
 
 ## Open questions (needs human)
 - none
@@ -43,7 +60,8 @@ lint/type/test loop. Getting this right first prevents rework and keeps slices s
 - [ ] AC1: `make check` runs ruff + mypy + pytest and exits 0 on a clean tree.
 - [ ] AC2: `python -m src.config` prints resolved, secret-redacted config and exits 0.
 - [ ] AC3: `ReasonCode` matches the closed set in `CONTEXT.md` exactly (asserted by a test).
-- [ ] AC4: No module imports anything left of it in the layer order (asserted by a test).
+- [ ] AC4: No `src` module imports a cloud/app dependency (`google.cloud`, `google.genai`,
+  `psycopg`, `streamlit`) at import time; asserted by a test (isolation guard).
 - [ ] AC5: Importing any `src` module makes no network/cloud call.
 
 ---
@@ -51,19 +69,24 @@ lint/type/test loop. Getting this right first prevents rework and keeps slices s
 ## Slices
 
 ### Slice 1 — Package skeleton & tooling config
-- **Status:** `[ ]`
+- **Status:** `[x]`
 - **Tier:** 🟢
-- **Inputs:** existing `requirements-dev.txt`
+- **Inputs:** existing `requirements-dev.txt`, populated `.venv`
 - **Outputs:** `pyproject.toml`, importable `src`, runnable pytest
-- **Files:** `pyproject.toml`, `src/__init__.py`, `tests/__init__.py`, `tests/conftest.py`
+- **Files:** `pyproject.toml`, `src/__init__.py`, `tests/__init__.py`, `tests/conftest.py`,
+  `tests/test_package.py`
 - **Acceptance criteria:**
-  - [ ] `pyproject.toml` configures ruff (line-length 100, py311), mypy (`--strict` on `src`),
-        pytest (`testpaths = ["tests"]`, markers `slow`, `cloud`, `integration`).
-  - [ ] `python -c "import src"` succeeds.
-  - [ ] `pytest -q` collects 0 tests and exits 0 (no tests yet is OK, not an error).
-- **Test:** `pytest --collect-only` returns 0.
+  - [x] `pyproject.toml` configures ruff (line-length 100, target py311), mypy
+        (`strict = true`, applied to `src`), pytest (`testpaths = ["tests"]`, markers `slow`,
+        `cloud`, `integration`).
+  - [x] `.venv/bin/python -c "import src"` succeeds from the repo root.
+  - [x] `.venv/bin/ruff check .` exits 0 and `.venv/bin/mypy src` exits 0.
+  - [x] `.venv/bin/pytest -q` exits 0 with the trivial import test below (zero tests would
+        exit **5**, which is not green).
+- **Test:** `tests/test_package.py::test_import_src` — asserts `import src` works.
 - **Tier C actions:** none
 - **Notes:** No `[build-system]` needed — this is an application, not a distributable package.
+  `tests/conftest.py` may start empty; it exists so later fixtures have a home.
 
 ### Slice 2 — Typed configuration & logging
 - **Status:** `[ ]`
@@ -105,11 +128,15 @@ lint/type/test loop. Getting this right first prevents rework and keeps slices s
 - **Outputs:** `Makefile` with `setup`, `fmt`, `lint`, `typecheck`, `test`, `check`, `clean`
 - **Files:** `Makefile`, `README.md` (Development section)
 - **Acceptance criteria:**
-  - [ ] `make check` = `ruff check` + `ruff format --check` + `mypy src` + `pytest -q`.
+  - [ ] `make check` = `ruff check .` + `ruff format --check .` + `mypy src` + `pytest -q`.
+  - [ ] Tools resolve to `.venv` (e.g. `PY := .venv/bin/python`), falling back to the system
+        interpreter when `.venv` is absent so the target still works on a fresh clone.
+  - [ ] `make setup` creates `.venv` and installs both requirements files
+        (`uv venv .venv && uv pip install -r requirements.txt -r requirements-dev.txt`),
+        with a `python -m venv` + `pip` fallback.
   - [ ] `make check` needs no GCP credentials and no network.
-  - [ ] Uses `uv` when available, else falls back to `python -m`; `.PHONY` declared.
-  - [ ] `make clean` removes caches only (never `data/`).
-- **Test:** `make check` exits 0 (verified manually + asserted in Slice 5 smoke test doc).
+  - [ ] `make clean` removes caches only (never `data/`); `.PHONY` declared.
+- **Test:** `make check` exits 0 from the repo root.
 - **Tier C actions:** none
 - **Notes:** Do **not** add pipeline targets (`data`, `ingest`, `db`, …) yet — each future
   feature adds its own target. No silent no-op stubs.
@@ -118,13 +145,16 @@ lint/type/test loop. Getting this right first prevents rework and keeps slices s
 - **Status:** `[ ]`
 - **Tier:** 🟢
 - **Inputs:** Slices 1–4
-- **Outputs:** a smoke test, fixture scaffolding, updated roadmap
-- **Files:** `tests/test_smoke.py`, `tests/fixtures/.gitkeep`, `docs/plan/ROADMAP.md`
+- **Outputs:** a smoke test, an import-isolation test, fixture scaffolding, updated roadmap
+- **Files:** `tests/test_smoke.py`, `tests/test_isolation.py`, `tests/fixtures/.gitkeep`,
+  `docs/plan/ROADMAP.md`
 - **Acceptance criteria:**
-  - [ ] Smoke test asserts `get_settings()` returns defaults and importing `src` opens no socket.
+  - [ ] `get_settings()` returns documented defaults with an empty environment.
+  - [ ] Importing every `src` module opens no socket and imports no cloud/app dependency
+        (satisfies AC4/AC5).
   - [ ] `tests/fixtures/.gitkeep` exists; `data/` is git-ignored except `.gitkeep`s.
   - [ ] `make check` green from a clean checkout.
-- **Test:** `tests/test_smoke.py` — 3 assertions.
+- **Test:** `tests/test_smoke.py` + `tests/test_isolation.py`.
 - **Tier C actions:** none
 - **Notes:** Update ROADMAP F00 → `done` only after this slice passes.
 
@@ -132,9 +162,13 @@ lint/type/test loop. Getting this right first prevents rework and keeps slices s
 
 ## Commands
 ```bash
-uv venv && uv pip install -r requirements.txt -r requirements-dev.txt   # or make setup
+# one-time bootstrap (before Slice 1; `make setup` exists from Slice 4)
+uv venv .venv && uv pip install -r requirements.txt -r requirements-dev.txt
+
+# the gate (raw commands for Slices 1–3, then `make check`)
+.venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy src && .venv/bin/pytest -q
 make check
-python -m src.config
+.venv/bin/python -m src.config
 ```
 
 ## Risks
@@ -149,3 +183,10 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 
 ## Log
 - 2026-10-21 — plan created (proposed).
+- 2026-10-21 — plan approved by human.
+- 2026-10-21 — slice 1 "Package skeleton & tooling config": added `pyproject.toml`
+  (ruff/mypy/pytest/pydantic plugin), `src/__init__.py`, `tests/` package + import test;
+  `ruff check`, `ruff format --check`, `mypy src`, `pytest` all exit 0 (1 test).
+- 2026-10-21 — scouted environment; fixed two plan defects: tooling requires `.venv`
+  (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so Slice 1
+  now ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.
