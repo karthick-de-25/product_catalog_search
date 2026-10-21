@@ -4,6 +4,9 @@ Hands-on steps to stand up the only cloud component. **Every command here is a T
 (critical) action — run them yourself, never ask the agent to.** Rough timeline: 15–40 min,
 most of it waiting for the cluster to be ready.
 
+> ⚠️ **Never paste real passwords into this file or the chat.** `.env` is git-ignored — keep
+> secrets there. This file lives in git.
+
 ---
 
 ## 0. Prereqs
@@ -14,10 +17,11 @@ most of it waiting for the cluster to be ready.
 ```bash
 gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
+gcloud config set compute/region us-central1
 ```
 
 > **Cost:** the cluster is the main cost driver (smallest primary instance ≈ a few $/day).
-> Keep it small, and **delete it when you're not demoing** (§6).
+> Keep it small, and **delete it when you're not demoing** (§9).
 
 ## 1. Enable APIs
 
@@ -29,23 +33,23 @@ gcloud services enable \
   compute.googleapis.com
 ```
 
+Wait ~2 minutes for propagation before the next step.
+
 ## 2. Prepare the VPC (required prerequisite for any AlloyDB cluster)
 
-```bash
-# reserve a /16 for Google-managed services (private services access)
-gcloud compute addresses create google-managed-services-default \
-  --global \
-  --purpose=VPC_PEERING \
-  --prefix-length=16 \
-  --description="peering range for Google services" \
-  --network=default
+Run **each command as a single line** (a bare `\` at line end can break in some shells):
 
-# peer the range to servicenetworking
-gcloud services vpc-peerings connect \
-  --service=servicenetworking.googleapis.com \
-  --ranges=google-managed-services-default \
-  --network=default
+```bash
+gcloud compute addresses create google-managed-services-default --global --purpose=VPC_PEERING --prefix-length=16 --description="peering range for Google services" --network=default
+
+gcloud compute addresses describe google-managed-services-default --global --format="value(address)"
+
+gcloud services vpc-peerings connect --service=servicenetworking.googleapis.com --ranges=google-managed-services-default --network=default
 ```
+
+> If `vpc-peerings connect` fails with `COMPUTE_IO_EXTERNAL` / "invalid authentication
+> credentials", it usually means the address above was never created — run the `addresses
+> create` (and its `describe` verification) first, then retry.
 
 ## 3. Create the cluster + primary instance (small, public IP for dev)
 
@@ -60,14 +64,22 @@ gcloud alloydb clusters create catalog-cluster \
   --password=YOUR_POSTGRES_PASSWORD
 
 # primary instance, 2 vCPU, public IP so the laptop can connect via the Auth Proxy
+# flag name varies by gcloud version: --assign-inbound-public-ip on newer versions
 gcloud alloydb instances create catalog-primary \
   --cluster=catalog-cluster \
   --region=$REGION \
   --cpu-count=2 \
-  --assign-public-ip
+  --assign-inbound-public-ip
 ```
 
 > If a flag name differs in your gcloud version, check `gcloud alloydb instances create --help`.
+> Inbound public IP is firewalled per-CIDR. If the Auth Proxy later times out, allowlist your
+> laptop's current public IP:
+>
+> ```bash
+> gcloud alloydb instances update catalog-primary --cluster=catalog-cluster --region=$REGION \
+>   --authorized-networks=$(curl -s https://api.ipify.org)/32
+> ```
 
 ## 4. Let AlloyDB call Vertex AI (for `embedding()` in SQL)
 
@@ -92,7 +104,7 @@ curl -o alloydb-auth-proxy https://storage.googleapis.com/alloydb-auth-proxy/v1/
   --public-ip --port 5432
 ```
 
-Expected: `{"severity":"INFO","message":"server listening on 127.0.0.1:5432"}`.
+Expected: a log line like `server listening on 127.0.0.1:5432`.
 
 ## 6. Create the `catalog` database
 
@@ -131,9 +143,9 @@ make load      # upsert 197 gold rows + embeddings    (Tier C — approve)
 
 Verification:
 ```sql
-select count(*) from products;                                   -- expect 197
-select count(*) from products where embedding is null;           -- expect 0
-select count(*) from products where tsv is null;                 -- expect 0
+select count(*) from products;              -- expect 197
+select count(*) from products where embedding is null;  -- expect 0
+select count(*) from products where tsv is null;         -- expect 0
 ```
 
 ## 9. Cleanup (when the demo is over)
@@ -144,3 +156,10 @@ gcloud alloydb clusters delete catalog-cluster --region=us-central1 --force
 
 AlloyDB instances cannot be paused — they bill per hour while the cluster exists. Delete it
 when not presenting.
+
+## If you paste secrets somewhere by accident
+
+- It's only safe if it **never reached git history**: check
+  `git log --all -S <secret> --oneline`. Working-tree-only leaks are fixed by editing the file.
+- **Rotate the password regardless** if the cluster was created with it:
+  `gcloud alloydb clusters update catalog-cluster --region=us-central1 --password=<new>`.
