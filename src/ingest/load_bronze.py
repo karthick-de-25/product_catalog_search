@@ -17,6 +17,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import duckdb
+import pandas as pd
 
 from src.config import get_settings
 from src.ingest.db import _IGNORED_PREFIXES, connect, init_schema
@@ -120,18 +121,24 @@ def ingest_file(
     fmt = path.suffix[1:]
     records = _RECORD_READERS[fmt](path)
     conn.execute("DELETE FROM bronze_records WHERE source_file = ?", [path.name])
-    conn.executemany(
-        f"""
-        INSERT INTO bronze_records
-            (run_id, supplier_id, source_file, source_format, row_index, raw_payload,
-             {", ".join(RAW_KEYS)})
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
+    # Bulk append — per-row ``executemany`` is ~1000x slower at scale (S04 finding).
+    columns = [
+        "run_id",
+        "supplier_id",
+        "source_file",
+        "source_format",
+        "row_index",
+        "raw_payload",
+        *RAW_KEYS,
+    ]
+    df = pd.DataFrame(
         [
             (run_id, supplier_id, path.name, fmt, index, json.dumps(payload, sort_keys=True), *raw)
             for index, (payload, raw) in enumerate(records)
         ],
+        columns=columns,
     )
+    conn.append("bronze_records", df)
     return LoadedFile(path.name, fmt, len(records))
 
 

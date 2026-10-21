@@ -40,6 +40,16 @@ class Settings(BaseSettings):
     contracts_dir: Path = Path("contracts")
     log_level: str = "INFO"
 
+    # --- S04 scale rehearsal (local, offline; never touches the demo DB) ---
+    scale_dir: Path = Path("data/scale")
+    scale_tier: str = "100k"  # 1k | 100k | 1M
+
+    # --- local embeddings (used by the scale rehearsal; vertex = AlloyDB in-DB, opt-in) ---
+    embedding_backend: str = "local"
+    local_embedding_model: str = "all-mpnet-base-v2"
+    embedding_dim: int = 768
+    vertex_embedding_cost_usd_per_1k_rows: float = 0.05
+
     # --- cloud opt-in (off by default, per CONTEXT.md) ---
     enable_cloud: bool = False
     gcp_project: str | None = None

@@ -84,6 +84,9 @@ gold: require-venv ## Normalize → gold catalog (F04)
 scorecard: require-venv ## Per-supplier quality scorecard + trend (optional O01)
 	$(PY) -m src.quality.scorecard
 
+scale: require-venv ## S04: offline scale rehearsal (generate→ingest→quality→gold→dedupe→embed)
+	SCALE_TIER=$(or $(TIER),100k) $(PY) -m src.scale.run_scale
+
 dedupe: require-venv ## Merge near-duplicate gold products (optional O03)
 	$(PY) -m src.enrichment.dedupe
 

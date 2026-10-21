@@ -66,6 +66,29 @@ RAG assistant, feedback loop. Build only if the core demo is solid and the human
 
 ---
 
+## Round 2 — scale readiness (planned, not built)
+
+Probability check: the demo proves the pattern on **3 suppliers / 240 rows**; the client reality
+is **~5,000–10,000 suppliers / 1–3M SKUs / 10–50M raw rows per year** (analysis endorsed by the
+human, 2026-11; volume table in [`README.md`](../../README.md)). S-features each get their own
+plan (`.pi/skills/plan`, `S0N-*.md`) before any code — nothing here is approved to build yet.
+
+| ID | Feature | Depends on | Status | Slices |
+|---|---|---|---|---|
+| S01 | Contract authoring assistant: infer draft YAML contracts from feed samples + LLM-assisted review | F03 | planned | — |
+| S02 | Incremental ingestion: per-file hash/watermark deltas, no full-catalog rebuild | F02 | planned | — |
+| S03 | Richer quarantine: granular sub-codes, review queue, supplier resubmission 🔴 | F03 | planned | — |
+| S04 | Scale rehearsals | **done** — `make scale`: 100 suppliers, 100k default (1M XL), local 768-d embeddings (offline), telemetry + reconciliation report | F01–F04 | done | 3/3 |
+| S05 | Distributed-class dedupe: blocking/minhash clustering, canonical SKU + supplier precedence | O03 | planned | — |
+| S06 | Embedding budget & freshness: delta re-embeds, chunked jobs, cost dry-run; local (`sentence-transformers`) + Vertex backends behind `EMBEDDING_BACKEND` flag 🔴 (new dependency) | F05 | planned | — |
+| S07 | Search for scale: facets, size-range, supplier preference, inventory/price rank hooks | F06 | planned | — |
+| S08 | Taxonomy & units expansion: hierarchy + unit-conversion registry (bar/mm/thread sizes) | F04 | planned | — |
+
+🔴 = touches a `CONTEXT.md` invariant (closed reason-code set) or cloud cost → `AGENTS.md` §4
+approval, flagged again in the feature plan.
+
+---
+
 ## Conventions
 
 - Feature ids are stable. Amend a plan in place; never create `FNN-v2.md`.

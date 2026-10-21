@@ -39,3 +39,7 @@ python-dotenv>=1.0,<2
 
 # Interactive profile report
 tabulate>=0.9,<1
+
+# Local embeddings (S04 scale rehearsal, offline). Heavy: pulls torch (~2 GB).
+# Optional at runtime — EMBEDDING_BACKEND=local falls back to deterministic vectors if absent.
+sentence-transformers>=3,<5

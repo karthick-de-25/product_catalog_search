@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 
 import duckdb
+import pandas as pd
 from rapidfuzz import fuzz
 
 from src.config import get_settings
@@ -29,6 +30,21 @@ create table if not exists gold_deduped (
 # Name tail we deliberately ignore when matching: "… for acme valves".
 _FOR_SUPPLIER = re.compile(r"\s+for\s+[\w\s]+$")
 _SIMILARITY_THRESHOLD = 88
+_BATCH_SIZE = 5_000  # rows held before a bulk append (see materialize_deduped)
+
+GOLD_DEDUPED_COLUMNS = (
+    "sku",
+    "supplier_id",
+    "name",
+    "brand",
+    "category",
+    "size_in",
+    "material",
+    "pressure_psi",
+    "lead_free",
+    "search_text",
+    "merged_skus",
+)
 
 _COLUMNS = (
     "sku",
@@ -114,11 +130,9 @@ def materialize_deduped(conn: duckdb.DuckDBPyConnection) -> dict[str, int]:
         ).fetchall()
     ]
     merged, stats = dedupe_rows(rows)
+    batch: list[tuple[object, ...]] = []
     for row in merged:
-        conn.execute(
-            "insert into gold_deduped (sku, supplier_id, name, brand, category, size_in, "
-            "material, pressure_psi, lead_free, search_text, merged_skus) "
-            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        batch.append(
             (
                 row["sku"],
                 row["supplier_id"],
@@ -131,8 +145,13 @@ def materialize_deduped(conn: duckdb.DuckDBPyConnection) -> dict[str, int]:
                 row["lead_free"],
                 row["search_text"],
                 row["merged_skus"],
-            ),
+            )
         )
+        if len(batch) >= _BATCH_SIZE:  # bulk append: same table/rows, faster at scale
+            conn.append("gold_deduped", pd.DataFrame(batch, columns=GOLD_DEDUPED_COLUMNS))
+            batch = []
+    if batch:
+        conn.append("gold_deduped", pd.DataFrame(batch, columns=GOLD_DEDUPED_COLUMNS))
     return stats
 
 

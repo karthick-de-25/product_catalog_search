@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import duckdb
+import pandas as pd
 
 from src.config import get_settings
 from src.enrichment.normalize import normalize_row
@@ -35,6 +36,21 @@ SILVER_COLUMNS = (
     "material_raw",
     "pressure_raw",
     "lead_free_raw",
+)
+
+_BATCH_SIZE = 5_000  # rows held before a bulk append (see materialize_gold)
+
+GOLD_COLUMNS = (
+    "sku",
+    "supplier_id",
+    "name",
+    "brand",
+    "category",
+    "size_in",
+    "material",
+    "pressure_psi",
+    "lead_free",
+    "search_text",
 )
 
 
@@ -75,13 +91,11 @@ def materialize_gold(conn: duckdb.DuckDBPyConnection) -> GoldRun:
     ).fetchall()
 
     gold_rows = size_known = 0
+    batch: list[tuple[str, ...]] = []
     for row in rows:
         gold = normalize_row(dict(zip(SILVER_COLUMNS, row)))
         gold["search_text"] = build_search_text(gold)
-        conn.execute(
-            "INSERT INTO gold_products (sku, supplier_id, name, brand, category, size_in, "
-            "material, pressure_psi, lead_free, search_text) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        batch.append(
             (
                 gold["sku"],
                 gold["supplier_id"],
@@ -93,11 +107,16 @@ def materialize_gold(conn: duckdb.DuckDBPyConnection) -> GoldRun:
                 gold["pressure_psi"],
                 gold["lead_free"],
                 gold["search_text"],
-            ),
+            )
         )
         gold_rows += 1
         if gold["size_in"] is not None:
             size_known += 1
+        if len(batch) >= _BATCH_SIZE:  # bulk append: same tables/rows, ~1000x faster at 100k
+            conn.append("gold_products", pd.DataFrame(batch, columns=GOLD_COLUMNS))
+            batch = []
+    if batch:
+        conn.append("gold_products", pd.DataFrame(batch, columns=GOLD_COLUMNS))
 
     silver_size_raw = conn.execute(
         "SELECT count(*) FROM silver_products WHERE size_raw <> ''"

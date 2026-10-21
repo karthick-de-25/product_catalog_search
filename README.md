@@ -11,6 +11,11 @@ PostgreSQL — with a Streamlit UI on top.
 **Round 1 focuses on two things: data quality + hybrid search.** Everything else is pending/optional
 ([`docs/plan/OPTIONAL.md`](./docs/plan/OPTIONAL.md)).
 
+**Round 2 (in progress):** make the same pipeline survive the client's real volume — thousands
+of suppliers, millions of SKUs. **S04 (scale rehearsals) is built**; the rest of the
+[scale-readiness table](#round-2--scale-readiness-planned-not-built) stays planned, with the
+[scale reality check](#scale-reality-check--the-clients-real-world-volume) below.
+
 ---
 
 ## Status — implemented vs pending
@@ -29,6 +34,7 @@ PostgreSQL — with a Streamlit UI on top.
 | **O01** Quality scorecard | Per-supplier completeness/validity/score + **trend history** | `make scorecard` |
 | **O03** Dedupe | Near-duplicate merge: gold **197 → 107**, 90 absorbed SKUs recorded | `make dedupe` |
 | **O04** Evaluation | Recall@10 / MRR / NDCG over 33 golden queries, keyword vs vector vs hybrid | `make eval` |
+| **S04** Scale rehearsals | 100 suppliers · 100k rows (1M XL) offline pipeline + local embeddings + telemetry/reconciliation report | `make scale` |
 
 ### ⏳ Pending / optional (needs your approval to build)
 
@@ -38,6 +44,25 @@ PostgreSQL — with a Streamlit UI on top.
 | **O5** RAG assistant | "Ask your catalog" with citations and a grounding/refusal rule | high |
 | **O6** Feedback & monitoring | Thumbs up/down, zero-result and latency tracking | low |
 | Eval polish | Paraphrase-style golden queries to show vector search's edge | low |
+
+### Round 2 — scale readiness (planned, not built)
+
+Round 1 proves the pattern on **3 suppliers / 240 rows**. The client reality is ~5,000–10,000
+suppliers and 1–3M SKUs (see [Scale reality check](#scale-reality-check--the-clients-real-world-volume)).
+These features close the gaps; each needs a plan (`/skill:plan S0N`) and human approval before code.
+
+| ID | Feature | Why | Effort |
+|---|---|---|---|
+| **S01** Contract authoring assistant | Infer draft YAML contracts from feed samples + LLM-assisted review | high |
+| **S02** Incremental ingestion (CDC/watermarking) | Delta loads per file instead of full-catalog rewrites each cycle | medium |
+| **S03** Richer quarantine + review queue 🔴 | Granular sub-codes, triage table/UI, supplier resubmission (reason-code change) | medium |
+| ~~S04~~ ✅ done | `make scale` — 100 suppliers · 100k rows (1M XL) · local 768-d embeddings · telemetry report | built 2026-10-22 |
+| **S05** Distributed-class dedupe | Blocking/minhash instead of O(n²); canonical SKU + supplier precedence | medium |
+| **S06** Embedding budget & freshness 🔴 | Delta re-embeds, chunked jobs, cost dry-run; local (sentence-transformers, 768-d) + Vertex backends behind `EMBEDDING_BACKEND` flag (new dependency) | medium |
+| **S07** Search for scale | Facets, size-range filter, supplier preference, inventory/price rank hooks | medium |
+| **S08** Taxonomy & units expansion | Hierarchical taxonomy + unit-conversion registry (bar, mm, thread sizes) | medium |
+
+🔴 = touches a `CONTEXT.md` invariant (closed reason-code set) or cloud cost → approval-required.
 
 ---
 
@@ -101,6 +126,40 @@ exactly. The scorecard turns that into per-supplier numbers with history.
 tokenizer (`ball_valves` is one word); vector search understands meaning. Hybrid fuses both
 rankings with Reciprocal Rank Fusion (`sql/04_hybrid_search.sql`, k=60), so a product found by
 *both* methods wins.
+
+---
+
+## Scale reality check — the client's real-world volume
+
+The scenario says "thousands of suppliers"; the demo runs **3 suppliers / 240 rows**. What a
+largest-in-US PVF/plumbing distributor actually pushes through this pipeline (Ferguson-scale:
+≈$30B revenue, 2M+ SKUs):
+
+| Dimension | Realistic scale | Demo today |
+|---|---|---|
+| Suppliers | 5,000–10,000 | 3 |
+| Active electronic feeds / yr | 1,000–5,000 | 3 |
+| Sellable SKUs | 1–3M | 197 |
+| Raw update rows / yr | 10–50M+ | 240 |
+| Dedupe blast radius | ~46% of catalog (≈900K merges) | 90/197 |
+| Quarantine per cycle @ ~18% | 200–500K rows | 43 |
+| Embedding runs (cap 500 rows) | 2,000–6,000 runs per full pass | 1 |
+
+*(Industry-typical figures for the largest US distributors — the README pins only "thousands of
+suppliers"; nothing above is a repo guarantee.)*
+
+### What breaks at that scale — and which feature fixes it
+
+| Pressure point | Symptom at scale | Fix |
+|---|---|---|
+| Per-supplier YAML contracts | Manual authoring for 5,000+ suppliers is impossible | **S01** |
+| Batch full-refresh ingestion | Full-catalog rewrite every cycle (10–50M rows) | **S02** |
+| Closed 4-code quarantine | 200–500K rows/cycle with no triage path | **S03** |
+| O(n²) pairwise dedupe | 46% dup rate at 2M SKUs → cluster-scale merge | **S05** |
+| Embedding caps (500 rows/run) | Months of runs, runaway Vertex AI cost | **S06** |
+| Keyword ranking at 2M SKUs | Thousands of hits; needs facets + availability/price | **S07** |
+| 5 categories / 2 units | Real catalogs: deep hierarchies, bar/mm/thread sizes | **S08** |
+| Nothing proven at volume | The pipeline has never run on real data volume | **S04** |
 
 ---
 

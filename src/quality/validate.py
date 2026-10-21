@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import duckdb
+import pandas as pd
 
 from src.config import get_settings
 from src.errors import ContractError, DataQualityError
@@ -47,6 +48,33 @@ SILVER_FIELDS = (
     "material",
     "pressure_psi",
     "lead_free",
+)
+
+_BATCH_SIZE = 2_500  # rows held before a bulk append (see run_quality)
+
+SILVER_COLUMNS = (
+    "run_id",
+    "supplier_id",
+    "source_file",
+    "sku",
+    "name",
+    "brand_raw",
+    "category_raw",
+    "size_raw",
+    "material_raw",
+    "pressure_raw",
+    "lead_free_raw",
+)
+QUARANTINE_COLUMNS = (
+    "run_id",
+    "supplier_id",
+    "source_file",
+    "row_index",
+    "sku",
+    "field",
+    "reason_code",
+    "detail",
+    "raw_payload",
 )
 
 
@@ -85,8 +113,25 @@ def run_quality(
     seen: set[str] = set()
     current_supplier: str | None = None
 
+    # Batched inserts: single-row ``execute`` per row is ~40 rows/s at 100k (S04 finding),
+    # so we collect and flush with ``executemany`` — same tables, rows, and invariants.
+    silver_batch: list[tuple[str, ...]] = []
+    quarantine_batch: list[tuple[str, ...]] = []
+
+    def _flush_batches() -> None:
+        nonlocal silver_batch, quarantine_batch
+        if silver_batch:
+            conn.append("silver_products", pd.DataFrame(silver_batch, columns=SILVER_COLUMNS))
+            silver_batch = []
+        if quarantine_batch:
+            conn.append(
+                "quarantine_records", pd.DataFrame(quarantine_batch, columns=QUARANTINE_COLUMNS)
+            )
+            quarantine_batch = []
+
     for source_file, supplier, row_index, payload_text in rows:
         if supplier != current_supplier:
+            _flush_batches()
             current_supplier = supplier
             seen = set()
         contract = contracts.get(supplier)
@@ -100,10 +145,7 @@ def run_quality(
         finding = check_row(contract, payload, seen)
         if finding is not None:
             sku = as_text(resolve_value(payload, contract.mapping["sku"])).strip()
-            conn.execute(
-                "INSERT INTO quarantine_records "
-                "(run_id, supplier_id, source_file, row_index, sku, field, reason_code, "
-                "detail, raw_payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            quarantine_batch.append(
                 (
                     run_id,
                     supplier,
@@ -114,21 +156,20 @@ def run_quality(
                     finding.reason.value,
                     finding.detail,
                     json.dumps(payload, sort_keys=True),
-                ),
+                )
             )
             quarantine += 1
             stats["quarantine"] += 1
         else:
             values = _silver_values(contract, payload)
-            conn.execute(
-                "INSERT INTO silver_products "
-                "(run_id, supplier_id, source_file, sku, name, brand_raw, category_raw, "
-                "size_raw, material_raw, pressure_raw, lead_free_raw) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (run_id, supplier, source_file, *values),
-            )
+            silver_batch.append((run_id, supplier, source_file, *values))
             silver += 1
             stats["silver"] += 1
+
+        if len(silver_batch) + len(quarantine_batch) >= _BATCH_SIZE:
+            _flush_batches()
+
+    _flush_batches()
 
     return QualityRun(
         bronze=len(rows), silver=silver, quarantine=quarantine, by_supplier=by_supplier
