@@ -3,6 +3,17 @@
 **Not required.** Build only after the core demo (F01–F07) is solid, and only with human approval
 (adding a feature is a critical change per `AGENTS.md` §4). Each would get its own `ONN-*.md` plan.
 
+## Recommended order (analysis, 2026-10-21)
+
+| Pri | Item | Why now | Cost |
+|---|---|---|---|
+| P0 | Keyword tokenizer fix (`search_text` underscores → spaces + reload) | keyword column is currently always empty; without it the UI looks broken | tiny code + 1 🔴 cloud UPDATE |
+| P1 | O4 Evaluation harness | proves "hybrid beats keyword" with numbers (Recall@10/MRR/NDCG) | offline |
+| P1 | O1 Quality scorecard | gives the data-quality pillar per-supplier numbers | offline |
+| P2 | O3 Dedupe | better catalog → better scores/search | offline |
+| P3 | O2 Gemini extraction / O5 RAG | wow factor; cloud cost + more tests | high |
+| P4 | O6 Feedback | after the demo exists | low |
+
 | ID | Idea | Value | Rough shape |
 |---|---|---|---|
 | O1 | Supplier quality scorecard | Per-supplier completeness/duplicate score + run trend | `src/quality/scorecard.py`, a report table |
