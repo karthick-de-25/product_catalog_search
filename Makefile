@@ -84,6 +84,9 @@ gold: require-venv ## Normalize → gold catalog (F04)
 scorecard: require-venv ## Per-supplier quality scorecard + trend (optional O01)
 	$(PY) -m src.quality.scorecard
 
+dedupe: require-venv ## Merge near-duplicate gold products (optional O03)
+	$(PY) -m src.enrichment.dedupe
+
 eval: require-venv ## Evaluates keyword vs vector vs hybrid (optional O04) — needs AlloyDB
 	$(PY) -m src.eval.golden
 
