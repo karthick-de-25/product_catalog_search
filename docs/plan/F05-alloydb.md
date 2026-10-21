@@ -1,7 +1,7 @@
 ---
 feature: F05
 title: AlloyDB setup, load, and embeddings
-status: approved
+status: done
 approved: 2026-10-21
 depends_on: [F04]
 ---
@@ -41,8 +41,8 @@ cloud component.
 - **Done when:** `SELECT count(*) FROM products` matches gold; no null embeddings.
 
 ## Acceptance
-- [ ] `sql/` creates the schema and indexes idempotently (verified on AlloyDB, 🔴 approved).
-- [ ] Gold rows load with embeddings; counts match.
+- [x] `sql/` creates the schema and indexes idempotently (verified on AlloyDB, 🔴 approved).
+- [x] Gold rows load with embeddings; counts match (197 live rows, 0 null embeddings).
 
 ## Commands
 ```bash
@@ -63,3 +63,8 @@ make load           # 🔴 critical — AlloyDB + Vertex AI
 - 2026-10-21 — ⏳ **cloud run pending (🔴 Tier C)**: need AlloyDB cluster + Auth Proxy +
   `.env` credentials before `make db` / `make load` can execute; acceptance criteria remain
   unchecked until a live run verifies schema + counts.
+- 2026-10-21 — 🔴 cloud run: human executed `make db` + `make load` against AlloyDB
+  (`asia-south1` cluster, Auth Proxy on 127.0.0.1:5432). Read-only verification passed:
+  197 products, 197 distinct sku, 0 null embeddings, 0 null search_text/tsv; extensions
+  vector/alloydb_scann/google_ml_integration/pg_trgm and all 5 indexes present; sample
+  embeddings are real 768-d vectors. F05 done.

@@ -19,11 +19,11 @@ The story: dirty feeds → ingest → quality gate → clean catalog → AlloyDB
 | F02 | Bronze ingestion | F01 | done | 2/2 |
 | F03 | Data quality: contract, validate, quarantine | F02 | done | 3/3 |
 | F04 | Clean catalog (gold) | F03 | done | 2/2 |
-| F05 | AlloyDB + load + embeddings 🔴 | F04 | in-progress | 2/2 (code; cloud run pending) |
+| F05 | AlloyDB + load + embeddings 🔴 | F04 | done | 2/2 |
 | F06 | Hybrid search (vector + keyword RRF) | F05 | todo | 2 |
 | F07 | Streamlit search demo | F06 | todo | 1 |
 
-**Next up:** F05 — approved. Run `/skill:implement F05`.
+**Next up:** F06 — run `/skill:plan F06` (draft plan exists; review and approve).
 
 ---
 
