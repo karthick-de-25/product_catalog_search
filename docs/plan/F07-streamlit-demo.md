@@ -1,8 +1,8 @@
 ---
 feature: F07
 title: Streamlit search demo
-status: proposed
-approved:
+status: done
+approved: 2026-10-21
 depends_on: [F06]
 ---
 
@@ -14,7 +14,7 @@ depends_on: [F06]
 
 ## Slices
 
-### Slice 1 — Search page   `[ ]`
+### Slice 1 — Search page   `[x]`
 - **In → out:** user query + filters → ranked results table
 - **Files:** `src/app/streamlit_app.py`, `Makefile`
 - **UI:** search box; filters (brand, category, lead-free); a "keyword only / hybrid" toggle that
@@ -24,8 +24,8 @@ depends_on: [F06]
 - **Done when:** `make app` launches and a query returns ranked results.
 
 ## Acceptance
-- [ ] `make app` opens the search page and returns results for a natural-language and a part-number query.
-- [ ] The keyword-only vs hybrid comparison is visible side by side.
+- [x] `make app` opens the search page and returns results for a natural-language and a part-number query.
+- [x] The keyword-only vs hybrid comparison is visible side by side.
 
 ## Commands
 ```bash
@@ -34,3 +34,7 @@ make app
 
 ## Log
 - 2026-10-21 — plan created (proposed); simplified for the round-1 demo.
+- 2026-10-21 — plan approved by human.
+- 2026-10-21 — slice 1: `src/app/streamlit_app.py` + `make app` — search box, category/brand/
+  lead-free filters, keyword vs hybrid side by side (SKU route too). Reuses the F06 search
+  API; client-side brand/lead-free filtering. Headless boot verified (HTTP 200). F07 done.

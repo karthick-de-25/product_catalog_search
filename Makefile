@@ -89,3 +89,6 @@ load: require-venv ## Load gold → AlloyDB + embeddings (🔴 critical — F05)
 
 search: require-venv ## Hybrid search demo (F06) — needs AlloyDB; usage: make search QUERY="..."
 	$(PY) -m src.search.hybrid_search "$(QUERY)"
+
+app: require-venv ## Launch the Streamlit demo (F07) — needs AlloyDB + proxy
+	$(PY) -m streamlit run src/app/streamlit_app.py

@@ -21,9 +21,9 @@ The story: dirty feeds → ingest → quality gate → clean catalog → AlloyDB
 | F04 | Clean catalog (gold) | F03 | done | 2/2 |
 | F05 | AlloyDB + load + embeddings 🔴 | F04 | done | 2/2 |
 | F06 | Hybrid search (vector + keyword RRF) | F05 | done | 2/2 |
-| F07 | Streamlit search demo | F06 | todo | 1 |
+| F07 | Streamlit search demo | F06 | done | 1/1 |
 
-**Next up:** F07 — run `/skill:plan F07` (draft plan exists; review and approve).
+**All core features (F00–F07) are done.** Optional ideas: `docs/plan/OPTIONAL.md`.
 
 ---
 
