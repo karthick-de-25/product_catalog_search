@@ -50,3 +50,7 @@ make check
 - 2026-10-21 — slice 2: `src/enrichment/gold.py` — `build_search_text` + `materialize_gold`
   + `make gold`; live run: gold 197 rows, size completeness silver 100% -> gold 96.4%.
   F04 done.
+- 2026-10-21 — [P0 fix] `build_search_text` now replaces `_` with spaces so the full-text
+  tokenizer sees real words (`ball_valves` -> `ball valves`). Regenerated gold locally, then
+  (🔴 approved) cleared AlloyDB embeddings + `make load` (197 re-embedded, 0 nulls). Keyword
+  search verified live: "brass ball valve lead free" and "pvc pipe" now return hits.

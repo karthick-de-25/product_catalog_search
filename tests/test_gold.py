@@ -43,6 +43,8 @@ def test_search_text_is_built_from_fields() -> None:
     assert gold
     for token in ("X-1", "brass", "0.75 in", "381 psi", "lead free"):
         assert token in gold
+    # P0 keyword fix: underscores would fuse tokens and break keyword search.
+    assert "_" not in gold
 
 
 def test_gold_matches_silver_with_canonical_units(tmp_path: Path) -> None:

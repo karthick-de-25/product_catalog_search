@@ -39,7 +39,11 @@ SILVER_COLUMNS = (
 
 
 def build_search_text(gold: dict[str, object]) -> str:
-    """Concatenate the fields someone might search for; never empty (sku + name exist)."""
+    """Concatenate the fields someone might search for; never empty (sku + name exist).
+
+    Underscores are replaced with spaces so the English full-text tokenizer sees real words
+    (``ball_valves`` -> ``ball valves``) — keyword search would otherwise return nothing.
+    """
     pieces = [
         str(gold["sku"]),
         str(gold["name"]),
@@ -50,7 +54,7 @@ def build_search_text(gold: dict[str, object]) -> str:
         f"{int(gold['pressure_psi'])} psi" if gold["pressure_psi"] is not None else "",
         "lead free" if gold["lead_free"] is True else "",
     ]
-    return " ".join(piece for piece in pieces if piece)
+    return " ".join(piece for piece in pieces if piece).replace("_", " ")
 
 
 @dataclass
