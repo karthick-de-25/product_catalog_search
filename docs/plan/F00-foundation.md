@@ -1,7 +1,7 @@
 ---
 feature: F00
 title: Foundation & dev environment
-status: approved
+status: done
 owner: agent
 approved: 2026-10-21
 created: 2026-10-21
@@ -143,6 +143,8 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
   feature adds its own target. No silent no-op stubs.
   `PY` falls back to `python3`; targets that need installed tools fail fast through
   `require-venv` with a clear message (exit 2) instead of a confusing ImportError.
+  Verification fix: `make setup` is idempotent — `uv venv --allow-existing` so re-running
+  does not fail when `.venv` already exists (found during `/skill:verify F00`).
 
 ### Slice 5 — Baseline verification & docs
 - **Status:** `[x]`
@@ -191,6 +193,9 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 ## Log
 - 2026-10-21 — plan created (proposed).
 - 2026-10-21 — plan approved by human.
+- 2026-10-21 — scouted environment (pre-approval); fixed two plan defects: tooling requires
+  `.venv` (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so
+  Slice 1 ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.
 - 2026-10-21 — slice 1 "Package skeleton & tooling config": added `pyproject.toml`
   (ruff/mypy/pytest/pydantic plugin), `src/__init__.py`, `tests/` package + import test;
   `ruff check`, `ruff format --check`, `mypy src`, `pytest` all exit 0 (1 test).
@@ -206,6 +211,20 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 - 2026-10-21 — slice 5 "Baseline verification & docs": added `tests/test_smoke.py` and
   `tests/test_isolation.py`; verified fixtures tracked and `data/` ignored; `make check`
   green (18 tests). Ready for `/skill:verify F00`.
-- 2026-10-21 — scouted environment; fixed two plan defects: tooling requires `.venv`
-  (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so Slice 1
-  now ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.
+- 2026-10-21 — [Tier B] `/skill:verify F00` PASS with one gap fixed in scope: `make setup`
+  was not repeatable (`uv venv` fails on an existing `.venv`); added `--allow-existing`.
+  Re-ran `make setup` twice (both exit 0) and `make check` (18 passed). F00 marked done.
+
+---
+
+## Verification — F00 (2026-10-21)
+
+- **AC1** `make check` → exit 0, 18 passed, ruff + format + mypy ✓
+- **AC2** `python -m src.config` → exit 0; `PGPASSWORD=topsecret` renders `"pgpassword": "***"`
+  (0 occurrences of the secret); env override `SEED=7` respected
+- **AC3** ReasonCode vs `CONTEXT.md` → 8 == 8, equal (independently parsed)
+- **AC4** no cloud/app dependency newly imported by `src` → test passes
+- **AC5** no socket opened on import → test passes (audit hook subprocess)
+- Adversarial: `SEED=not-an-int` fails loudly (exit 1, ValidationError); two `src.config`
+  runs are byte-identical; no internal/forbidden imports in `src/`; `make clean` leaves
+  `data/` intact; no secrets or non-placeholder `data/` files tracked.

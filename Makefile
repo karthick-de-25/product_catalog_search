@@ -32,7 +32,7 @@ require-venv:
 
 setup: ## Create .venv and install runtime + dev dependencies
 	@if command -v uv >/dev/null 2>&1; then \
-		uv venv $(VENV) && \
+		uv venv --allow-existing $(VENV) && \
 		uv pip install --python $(VENV_PY) -r requirements.txt -r requirements-dev.txt; \
 	else \
 		python3 -m venv $(VENV) && \
