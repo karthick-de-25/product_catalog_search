@@ -254,6 +254,30 @@ EMBEDDING_MODEL=text-embedding-005
 
 ---
 
+## Development (local, no cloud)
+
+The dev loop is a single Makefile entry point. `make setup` creates the virtualenv and
+installs dependencies; `make check` is the gate and never needs GCP credentials.
+
+```bash
+make setup      # create .venv and install requirements*.txt (uv preferred, pip fallback)
+make fmt        # ruff format + ruff check --fix
+make lint       # ruff check
+make typecheck  # mypy --strict on src/
+make test       # pytest
+make check      # lint + format check + types + tests   ← run before every commit
+make clean      # remove caches only (never touches data/)
+```
+
+Pipeline targets (`data`, `ingest`, `quality`, `enrich`, `gold`, `db`, `load`, `embed`,
+`eval`, `app`) are added by the feature that implements them — see
+[`docs/plan/ROADMAP.md`](./docs/plan/ROADMAP.md). Nothing here calls GCP.
+
+For the AI-agent build workflow, see [`AGENTS.md`](./AGENTS.md) and
+[`docs/agents/README.md`](./docs/agents/README.md).
+
+---
+
 ## How to run (step by step)
 
 ```bash

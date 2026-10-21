@@ -123,24 +123,26 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
 - **Notes:** Reason codes are a closed set; changing them is Tier C.
 
 ### Slice 4 — Makefile dev loop
-- **Status:** `[ ]`
+- **Status:** `[x]`
 - **Tier:** 🟡
 - **Inputs:** the tools configured in Slice 1
 - **Outputs:** `Makefile` with `setup`, `fmt`, `lint`, `typecheck`, `test`, `check`, `clean`
 - **Files:** `Makefile`, `README.md` (Development section)
 - **Acceptance criteria:**
-  - [ ] `make check` = `ruff check .` + `ruff format --check .` + `mypy src` + `pytest -q`.
-  - [ ] Tools resolve to `.venv` (e.g. `PY := .venv/bin/python`), falling back to the system
+  - [x] `make check` = `ruff check .` + `ruff format --check .` + `mypy src` + `pytest -q`.
+  - [x] Tools resolve to `.venv` (e.g. `PY := .venv/bin/python`), falling back to the system
         interpreter when `.venv` is absent so the target still works on a fresh clone.
-  - [ ] `make setup` creates `.venv` and installs both requirements files
+  - [x] `make setup` creates `.venv` and installs both requirements files
         (`uv venv .venv && uv pip install -r requirements.txt -r requirements-dev.txt`),
         with a `python -m venv` + `pip` fallback.
-  - [ ] `make check` needs no GCP credentials and no network.
-  - [ ] `make clean` removes caches only (never `data/`); `.PHONY` declared.
+  - [x] `make check` needs no GCP credentials and no network.
+  - [x] `make clean` removes caches only (never `data/`); `.PHONY` declared.
 - **Test:** `make check` exits 0 from the repo root.
 - **Tier C actions:** none
 - **Notes:** Do **not** add pipeline targets (`data`, `ingest`, `db`, …) yet — each future
   feature adds its own target. No silent no-op stubs.
+  `PY` falls back to `python3`; targets that need installed tools fail fast through
+  `require-venv` with a clear message (exit 2) instead of a confusing ImportError.
 
 ### Slice 5 — Baseline verification & docs
 - **Status:** `[ ]`
@@ -194,6 +196,9 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 - 2026-10-21 — slice 3 "Shared errors & reason codes": `src/errors.py` (`ReasonCode` StrEnum,
   `PipelineError` + `ConfigError`/`ContractError`/`DataQualityError`), drift test parses
   `CONTEXT.md`; all checks green (12 tests).
+- 2026-10-21 — [Tier B] slice 4 "Makefile dev loop": added `Makefile` (help/setup/fmt/lint/
+  typecheck/test/check/clean, venv-aware with `require-venv` guard) and a README
+  "Development (local, no cloud)" section; `make check` green (12 tests).
 - 2026-10-21 — scouted environment; fixed two plan defects: tooling requires `.venv`
   (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so Slice 1
   now ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.

@@ -16,7 +16,7 @@ Legend: 🔴 = feature will need Tier C (cloud/cost) approval during build.
 
 | ID | Feature | Depends on | Status | Slices |
 |---|---|---|---|---|
-| F00 | Foundation & dev environment | — | in-progress | 3/5 |
+| F00 | Foundation & dev environment | — | in-progress | 4/5 |
 | F01 | Synthetic dirty supplier feeds | F00 | planned | 5 |
 | F02 | Bronze ingestion & profiling | F01 | todo | 4 |
 | F03 | Data contracts, validation & quarantine | F02 | todo | 5 |
