@@ -196,6 +196,9 @@ python-dotenv
 
 ### 2. GCP and AlloyDB
 
+Full step-by-step (VPC peering, cluster, Auth Proxy, permissions, cleanup):
+[`docs/gcp-setup.md`](./docs/gcp-setup.md).
+
 ```bash
 gcloud auth login
 gcloud auth application-default login
