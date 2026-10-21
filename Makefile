@@ -84,6 +84,9 @@ gold: require-venv ## Normalize → gold catalog (F04)
 scorecard: require-venv ## Per-supplier quality scorecard + trend (optional O01)
 	$(PY) -m src.quality.scorecard
 
+eval: require-venv ## Evaluates keyword vs vector vs hybrid (optional O04) — needs AlloyDB
+	$(PY) -m src.eval.golden
+
 db: require-venv ## Create AlloyDB schema/indexes (🔴 critical — F05)
 	$(PY) -m src.load.apply_sql
 

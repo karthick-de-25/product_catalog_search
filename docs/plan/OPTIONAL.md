@@ -11,7 +11,7 @@ Done: P0 keyword fix (F04), O1 scorecard. Remaining backlog, ranked by value/eff
 
 | Pri | Item | Status | Why | Cost |
 |---|---|---|---|---|
-| P1 | O4 Evaluation harness | todo | proves hybrid > keyword > vector with Recall@10 / MRR / NDCG on a fair baseline (P0 fixed) | offline |
+| P1 | O4 Evaluation harness | **done** | proved hybrid === keyword on literal queries (post-P0); vector trails slightly; paraphrase queries noted for future | offline |
 | P2 | O3 Dedupe | todo | better catalog → better search + scorecards; do before final eval baseline | offline |
 | P3 | O2 Gemini extraction | todo | close the README's enrichment gap (JSON-schema output, confidence, review queue) | medium, LLM $ |
 | P3 | O5 RAG assistant | todo | biggest wow (citations + refusal); most effort, real Vertex AI usage | high |
