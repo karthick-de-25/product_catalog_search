@@ -1,8 +1,8 @@
 ---
 feature: F05
 title: AlloyDB setup, load, and embeddings
-status: proposed
-approved:
+status: approved
+approved: 2026-10-21
 depends_on: [F04]
 ---
 
@@ -17,7 +17,7 @@ cloud component.
 
 ## Slices
 
-### Slice 1 — SQL schema + indexes   `[ ]`
+### Slice 1 — SQL schema + indexes   `[x]`  (cloud apply pending)
 - **In → out:** `sql/*.sql` → an idempotent apply script
 - **Files:** `sql/01_extensions.sql`, `sql/02_schema.sql`, `sql/03_indexes.sql`,
   `src/load/apply_sql.py`, `Makefile`
@@ -28,7 +28,7 @@ cloud component.
 - **Critical actions:** 🔴 `make db` — creates extensions/tables/indexes in AlloyDB.
 - **Done when:** SQL files are reviewed and the apply script is idempotent.
 
-### Slice 2 — Load + embeddings   `[ ]`
+### Slice 2 — Load + embeddings   `[x]`  (cloud run pending)
 - **In → out:** `gold_products` → AlloyDB `products` (upsert) → `embedding` populated
 - **Files:** `src/load/load_alloydb.py`, `Makefile`
 - **Approach:** connect via Auth Proxy (`ENABLE_CLOUD=true` required); batched upsert; then
@@ -53,3 +53,13 @@ make load           # 🔴 critical — AlloyDB + Vertex AI
 
 ## Log
 - 2026-10-21 — plan created (proposed); simplified for the round-1 demo.
+- 2026-10-21 — plan approved by human.
+- 2026-10-21 — slice 1 code: `sql/01..03` (extensions, products schema, scann/gin/trgm
+  indexes), `src/load/apply_sql.py` (idempotent, IF NOT EXISTS), `make db`. Offline test
+  asserts required statements.
+- 2026-10-21 — slice 2 code: `src/load/load_alloydb.py` (upsert + capped embedding update),
+  `make load`. Both targets refuse without `ENABLE_CLOUD=true`/`PGPASSWORD` (fail loudly,
+  verified locally).
+- 2026-10-21 — ⏳ **cloud run pending (🔴 Tier C)**: need AlloyDB cluster + Auth Proxy +
+  `.env` credentials before `make db` / `make load` can execute; acceptance criteria remain
+  unchecked until a live run verifies schema + counts.

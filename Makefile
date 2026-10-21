@@ -80,3 +80,9 @@ quality: require-venv ## Validate → silver + quarantine (F03)
 
 gold: require-venv ## Normalize → gold catalog (F04)
 	$(PY) -m src.enrichment.gold
+
+db: require-venv ## Create AlloyDB schema/indexes (🔴 critical — F05)
+	$(PY) -m src.load.apply_sql
+
+load: require-venv ## Load gold → AlloyDB + embeddings (🔴 critical — F05)
+	$(PY) -m src.load.load_alloydb
