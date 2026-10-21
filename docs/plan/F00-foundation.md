@@ -1,0 +1,151 @@
+---
+feature: F00
+title: Foundation & dev environment
+status: proposed
+owner: agent
+approved:
+created: 2026-10-21
+updated: 2026-10-21
+depends_on: []
+---
+
+# F00 — Foundation & dev environment
+
+## Goal
+A typed, tested Python project skeleton with a single `make check` gate, so every later
+feature lands on a green, reproducible baseline.
+
+## Why now
+Every other feature depends on config, logging, shared errors/reason codes, and a working
+lint/type/test loop. Getting this right first prevents rework and keeps slices small.
+
+## Scope
+- In scope: `pyproject.toml` tool config, `src/` package skeleton, `src/config.py`,
+  `src/logging_utils.py`, `src/errors.py` (with the closed `ReasonCode` enum), `tests/`
+  harness, `Makefile` dev targets.
+- Non-goals: any pipeline/business logic (generation, ingestion, quality, enrichment,
+  search, RAG), any AlloyDB/GCP wiring, any dependency beyond dev tooling.
+
+## Already present (created during repo setup — verify, don't recreate)
+- `.gitignore`, `.env.example`, `requirements.txt`, `requirements-dev.txt`
+- `AGENTS.md`, `CONTEXT.md`, `docs/plan/*`, `.pi/*`
+
+## Assumptions
+- [ ] Python 3.11+ available — verify `python3 --version`; verified 3.12.3.
+- [ ] `uv` preferred, pip fallback — verify `which uv`.
+- [ ] Tool config in `pyproject.toml` is respected without an installable build backend —
+      verify `ruff check` / `mypy` / `pytest` read it from the repo root.
+
+## Open questions (needs human)
+- none
+
+## Acceptance criteria (feature-level)
+- [ ] AC1: `make check` runs ruff + mypy + pytest and exits 0 on a clean tree.
+- [ ] AC2: `python -m src.config` prints resolved, secret-redacted config and exits 0.
+- [ ] AC3: `ReasonCode` matches the closed set in `CONTEXT.md` exactly (asserted by a test).
+- [ ] AC4: No module imports anything left of it in the layer order (asserted by a test).
+- [ ] AC5: Importing any `src` module makes no network/cloud call.
+
+---
+
+## Slices
+
+### Slice 1 — Package skeleton & tooling config
+- **Status:** `[ ]`
+- **Tier:** 🟢
+- **Inputs:** existing `requirements-dev.txt`
+- **Outputs:** `pyproject.toml`, importable `src`, runnable pytest
+- **Files:** `pyproject.toml`, `src/__init__.py`, `tests/__init__.py`, `tests/conftest.py`
+- **Acceptance criteria:**
+  - [ ] `pyproject.toml` configures ruff (line-length 100, py311), mypy (`--strict` on `src`),
+        pytest (`testpaths = ["tests"]`, markers `slow`, `cloud`, `integration`).
+  - [ ] `python -c "import src"` succeeds.
+  - [ ] `pytest -q` collects 0 tests and exits 0 (no tests yet is OK, not an error).
+- **Test:** `pytest --collect-only` returns 0.
+- **Tier C actions:** none
+- **Notes:** No `[build-system]` needed — this is an application, not a distributable package.
+
+### Slice 2 — Typed configuration & logging
+- **Status:** `[ ]`
+- **Tier:** 🟢
+- **Inputs:** env vars documented in `.env.example`
+- **Outputs:** `src/config.py` (`Settings` dataclass/pydantic model + `get_settings()`),
+  `src/logging_utils.py` (`configure_logging`, module logger factory)
+- **Files:** `src/config.py`, `src/logging_utils.py`, `tests/test_config.py`
+- **Acceptance criteria:**
+  - [ ] All config comes from env with documented defaults; no secrets hard-coded.
+  - [ ] Cloud features are off by default (`ENABLE_CLOUD=false`); `GCP_PROJECT` optional.
+  - [ ] A `redacted()` view hides secrets (e.g. `PGPASSWORD`) for logging.
+  - [ ] `python -m src.config` prints the redacted settings as JSON and exits 0.
+  - [ ] Missing required local paths do not raise at import time.
+- **Test:** `tests/test_config.py::test_defaults_and_redaction` — defaults apply;
+  `redacted()` masks the password; env override wins (via `monkeypatch`).
+- **Tier C actions:** none
+- **Notes:** Follow `CONTEXT.md` — cloud/network calls must be opt-in.
+
+### Slice 3 — Shared errors & reason codes
+- **Status:** `[ ]`
+- **Tier:** 🟢
+- **Inputs:** `CONTEXT.md` "Reason codes" table
+- **Outputs:** `src/errors.py` with `ReasonCode` (closed enum), `DataQualityError`,
+  `ContractError`, `ConfigError`, and a `PipelineError` base
+- **Files:** `src/errors.py`, `tests/test_errors.py`
+- **Acceptance criteria:**
+  - [ ] `ReasonCode` values exactly match `CONTEXT.md` (8 codes) — no extras, none missing.
+  - [ ] Errors carry structured context (e.g. `sku`, `field`, `reason_code`).
+  - [ ] A test parses `CONTEXT.md` and asserts the enum matches (guards against drift).
+- **Test:** `tests/test_errors.py::test_reason_codes_match_context` — parses `CONTEXT.md`.
+- **Tier C actions:** none
+- **Notes:** Reason codes are a closed set; changing them is Tier C.
+
+### Slice 4 — Makefile dev loop
+- **Status:** `[ ]`
+- **Tier:** 🟡
+- **Inputs:** the tools configured in Slice 1
+- **Outputs:** `Makefile` with `setup`, `fmt`, `lint`, `typecheck`, `test`, `check`, `clean`
+- **Files:** `Makefile`, `README.md` (Development section)
+- **Acceptance criteria:**
+  - [ ] `make check` = `ruff check` + `ruff format --check` + `mypy src` + `pytest -q`.
+  - [ ] `make check` needs no GCP credentials and no network.
+  - [ ] Uses `uv` when available, else falls back to `python -m`; `.PHONY` declared.
+  - [ ] `make clean` removes caches only (never `data/`).
+- **Test:** `make check` exits 0 (verified manually + asserted in Slice 5 smoke test doc).
+- **Tier C actions:** none
+- **Notes:** Do **not** add pipeline targets (`data`, `ingest`, `db`, …) yet — each future
+  feature adds its own target. No silent no-op stubs.
+
+### Slice 5 — Baseline verification & docs
+- **Status:** `[ ]`
+- **Tier:** 🟢
+- **Inputs:** Slices 1–4
+- **Outputs:** a smoke test, fixture scaffolding, updated roadmap
+- **Files:** `tests/test_smoke.py`, `tests/fixtures/.gitkeep`, `docs/plan/ROADMAP.md`
+- **Acceptance criteria:**
+  - [ ] Smoke test asserts `get_settings()` returns defaults and importing `src` opens no socket.
+  - [ ] `tests/fixtures/.gitkeep` exists; `data/` is git-ignored except `.gitkeep`s.
+  - [ ] `make check` green from a clean checkout.
+- **Test:** `tests/test_smoke.py` — 3 assertions.
+- **Tier C actions:** none
+- **Notes:** Update ROADMAP F00 → `done` only after this slice passes.
+
+---
+
+## Commands
+```bash
+uv venv && uv pip install -r requirements.txt -r requirements-dev.txt   # or make setup
+make check
+python -m src.config
+```
+
+## Risks
+- `mypy --strict` may be noisy early → keep `src` small and typed from day one.
+- Ruff/mypy version drift → pinned in `requirements-dev.txt`.
+- Adding pipeline target stubs prematurely → explicitly forbidden above.
+
+## Rollback
+Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructive or cloud-side.
+
+---
+
+## Log
+- 2026-10-21 — plan created (proposed).

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/earendil-works/pi-mono/main/packages/coding-agent/schemas/settings.json",
+  "enableSkillCommands": true,
+  "skills": ["skills"],
+  "prompts": []
+}

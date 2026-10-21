@@ -1,0 +1,50 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+
+# ---- Tooling caches ----
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+build/
+dist/
+
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+service-account*.json
+
+# ---- Local data & artifacts (regenerate with `make data`) ----
+# Ignore everything under data/, but keep the directory skeleton and placeholders.
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/**/README.md
+*.duckdb
+*.duckdb.wal
+*.parquet
+
+# ---- GCP / AlloyDB ----
+alloydb-auth-proxy
+alloydb-auth-proxy.exe
+*.log
+
+# ---- Editors / OS ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.ipynb_checkpoints/
