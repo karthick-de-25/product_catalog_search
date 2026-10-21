@@ -48,3 +48,4 @@ Thumbs.db
 .idea/
 .vscode/
 .ipynb_checkpoints/
+docs/gcp-person-setup.md
