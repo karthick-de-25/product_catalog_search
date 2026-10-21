@@ -45,7 +45,7 @@ def main() -> None:
     with st.form("search_form"):
         query = st.text_input("Query", value="3/4 brass ball valve lead free")
         col1, col2, col3, col4 = st.columns(4)
-        category = col1.selectbox("Category", [""] + _CATEGORIES)
+        category = col1.selectbox("Category", ["", *_CATEGORIES])
         brand = col2.text_input("Brand contains", "")
         lead_free = col3.selectbox("Lead free", ["any", "yes"])
         limit = col4.slider("Show top N", 5, 25, 10)
