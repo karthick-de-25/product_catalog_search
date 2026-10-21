@@ -86,3 +86,6 @@ db: require-venv ## Create AlloyDB schema/indexes (🔴 critical — F05)
 
 load: require-venv ## Load gold → AlloyDB + embeddings (🔴 critical — F05)
 	$(PY) -m src.load.load_alloydb
+
+search: require-venv ## Hybrid search demo (F06) — needs AlloyDB; usage: make search QUERY="..."
+	$(PY) -m src.search.hybrid_search "$(QUERY)"

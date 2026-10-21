@@ -20,10 +20,10 @@ The story: dirty feeds → ingest → quality gate → clean catalog → AlloyDB
 | F03 | Data quality: contract, validate, quarantine | F02 | done | 3/3 |
 | F04 | Clean catalog (gold) | F03 | done | 2/2 |
 | F05 | AlloyDB + load + embeddings 🔴 | F04 | done | 2/2 |
-| F06 | Hybrid search (vector + keyword RRF) | F05 | todo | 2 |
+| F06 | Hybrid search (vector + keyword RRF) | F05 | done | 2/2 |
 | F07 | Streamlit search demo | F06 | todo | 1 |
 
-**Next up:** F06 — run `/skill:plan F06` (draft plan exists; review and approve).
+**Next up:** F07 — run `/skill:plan F07` (draft plan exists; review and approve).
 
 ---
 

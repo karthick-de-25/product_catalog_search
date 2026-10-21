@@ -1,8 +1,8 @@
 ---
 feature: F06
 title: Hybrid search (vector + keyword RRF)
-status: proposed
-approved:
+status: done
+approved: 2026-10-21
 depends_on: [F05]
 ---
 
@@ -15,7 +15,7 @@ language — and fuses vector and keyword results with Reciprocal Rank Fusion.
 
 ## Slices
 
-### Slice 1 — Router + SQL   `[ ]`
+### Slice 1 — Router + SQL   `[x]`
 - **In → out:** a query string → `("sku" | "text", params)`
 - **Files:** `sql/04_hybrid_search.sql`, `src/search/hybrid_search.py`, `tests/test_search.py`
 - **Test:** `test_search.py::test_route_query` — `"A-1234"` routes to SKU lookup; `"brass ball
@@ -23,7 +23,7 @@ language — and fuses vector and keyword results with Reciprocal Rank Fusion.
 - **Critical actions:** none
 - **Done when:** the RRF SQL is written and the router is tested.
 
-### Slice 2 — Search API + `make search`   `[ ]`
+### Slice 2 — Search API + `make search`   `[x]`
 - **In → out:** query → ranked rows (`vector + keyword FULL OUTER JOIN`, `k = 60`)
 - **Files:** `src/search/hybrid_search.py` (query executor), `Makefile`
 - **Test:** `test_search.py::test_rrf_merge` — merging two canned ranked lists produces the
@@ -32,8 +32,8 @@ language — and fuses vector and keyword results with Reciprocal Rank Fusion.
 - **Done when:** `make search QUERY="..."` prints ranked results against AlloyDB.
 
 ## Acceptance
-- [ ] Keyword-only, vector-only, and hybrid RRF paths all work; the router picks SKU vs text.
-- [ ] `test_search.py` covers routing and RRF merge offline.
+- [x] Keyword-only, vector-only, and hybrid RRF paths all work; the router picks SKU vs text.
+- [x] `test_search.py` covers routing and RRF merge offline.
 
 ## Commands
 ```bash
@@ -43,3 +43,10 @@ make search QUERY="3/4 brass ball valve lead free"   # needs AlloyDB
 
 ## Log
 - 2026-10-21 — plan created (proposed); simplified for the round-1 demo.
+- 2026-10-21 — plan approved by human.
+- 2026-10-21 — slice 1: `sql/04_hybrid_search.sql` (named-param RRF, k=60) +
+  `src/search/hybrid_search.py` (SKU-pattern router + pure `rrf_merge`); offline tests.
+- 2026-10-21 — slice 2: keyword/vector/hybrid executors + `make search`. Live demo vs
+  AlloyDB: keyword-only 0 hits (tokenizer), vector + hybrid rank brass ball valves
+  (ACME-0069/0042, NORT-0075 …). Fixed `round(real/double,int)` -> `::numeric` and
+  `%(cat)s::text` type inference in all three paths. F06 done.
