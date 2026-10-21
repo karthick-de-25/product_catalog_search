@@ -47,8 +47,9 @@ The loop:
 `make check` is deliberately light: `ruff` + `pytest` (mypy is optional). There is no separate
 verification ceremony.
 
-Current state: **F00 (Foundation) is done; F01 (dirty supplier feeds) is planned.** Run
-`/skill:plan F01` to review it, or `/skill:status` for a progress snapshot.
+Current state: **all core features F00–F07 are done** — dirty feeds → quality gate → gold →
+AlloyDB → hybrid search → Streamlit demo. Run `make app` to try it. Optional extras:
+[`docs/plan/OPTIONAL.md`](./docs/plan/OPTIONAL.md).
 
 ---
 
