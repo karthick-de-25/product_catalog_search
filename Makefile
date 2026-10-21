@@ -81,6 +81,9 @@ quality: require-venv ## Validate → silver + quarantine (F03)
 gold: require-venv ## Normalize → gold catalog (F04)
 	$(PY) -m src.enrichment.gold
 
+scorecard: require-venv ## Per-supplier quality scorecard + trend (optional O01)
+	$(PY) -m src.quality.scorecard
+
 db: require-venv ## Create AlloyDB schema/indexes (🔴 critical — F05)
 	$(PY) -m src.load.apply_sql
 
