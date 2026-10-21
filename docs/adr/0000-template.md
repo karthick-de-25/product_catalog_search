@@ -22,4 +22,4 @@ The choice we made, stated in one or two sentences.
 ---
 
 > Writing a new ADR is a normal agent action for design decisions. Changing an **accepted**
-> ADR's decision is Tier C (requires the human).
+> ADR's decision is a critical change (requires the human).

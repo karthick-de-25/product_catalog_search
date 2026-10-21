@@ -1,158 +1,73 @@
 # ROADMAP — Product Catalog Intelligence Platform
 
-Single source of truth for delivery order. A **feature** is a vertical capability with its own
-plan file `docs/plan/FNN-slug.md`. A **slice** is the smallest end-to-end increment of a feature.
+**Core = data quality + hybrid search.** Optional extras are in [`OPTIONAL.md`](./OPTIONAL.md).
 
-**Statuses:** `todo` · `planned` · `approved` · `in-progress` · `done` · `blocked`
-
-Workflow: `/skill:plan FNN` → human approves → `/skill:implement FNN` → `/skill:verify FNN`.
-Never start a feature whose dependencies are not `done`. Never implement without an approved plan.
-
-Legend: 🔴 = feature will need Tier C (cloud/cost) approval during build.
+Workflow: `/skill:plan FNN` → human approves → `/skill:implement FNN`.
+Statuses: `todo` · `planned` · `approved` · `in-progress` · `done` · `blocked`.
+Keep features to **≤3 slices**, one happy-path test each. 🔴 = needs critical approval (cloud/cost).
 
 ---
 
-## Progress
+## Core (first round)
+
+The story: dirty feeds → ingest → quality gate → clean catalog → AlloyDB → hybrid search → demo.
 
 | ID | Feature | Depends on | Status | Slices |
 |---|---|---|---|---|
-| F00 | Foundation & dev environment | — | done | 5/5 |
-| F01 | Synthetic dirty supplier feeds | F00 | planned | 5 |
-| F02 | Bronze ingestion & profiling | F01 | todo | 4 |
-| F03 | Data contracts, validation & quarantine | F02 | todo | 5 |
-| F04 | Quality scorecard & monitoring | F03 | todo | 4 |
-| F05 | Normalization & standardization | F03 | todo | 5 |
-| F06 | LLM attribute extraction (Gemini) | F05 | todo | 5 |
-| F07 | Deduplication | F05 | todo | 4 |
-| F08 | Gold canonical catalog | F06, F07 | todo | 4 |
-| F09 | AlloyDB foundation 🔴 | F08 | todo | 5 |
-| F10 | Load gold + embeddings 🔴 | F09 | todo | 5 |
-| F11 | Hybrid search & query routing | F10 | todo | 5 |
-| F12 | Evaluation harness | F11 | todo | 5 |
-| F13 | RAG assistant | F11 | todo | 6 |
-| F14 | Streamlit app | F12, F13 | todo | 4 |
-| F15 | Feedback & observability | F13, F14 | todo | 3 |
+| F00 | Foundation & dev env | — | done | 5/5 |
+| F01 | Synthetic dirty supplier feeds | F00 | planned | 2 |
+| F02 | Bronze ingestion | F01 | todo | 2 |
+| F03 | Data quality: contract, validate, quarantine | F02 | todo | 3 |
+| F04 | Clean catalog (gold) | F03 | todo | 2 |
+| F05 | AlloyDB + load + embeddings 🔴 | F04 | todo | 2 |
+| F06 | Hybrid search (vector + keyword RRF) | F05 | todo | 2 |
+| F07 | Streamlit search demo | F06 | todo | 1 |
 
 **Next up:** F01 — run `/skill:plan F01` (draft plan exists; review and approve).
 
 ---
 
-## Backlog outline (slice titles)
+## Slice outline (core)
 
-> Detailed, executable plan files are authored just-in-time by the `plan` skill. Full plans
-> exist today for F00–F03. The list below is the agreed scope — do not silently expand it.
+### F01 · Synthetic dirty supplier feeds — *`F01-dirty-data.md`*
+1. Seeded generator: 3 suppliers, 3 formats (CSV/JSON/XML), small catalog, injected defects
+2. `make data` + deterministic output + a manifest of defect counts
 
-### F00 · Foundation & dev environment — *draft plan: `F00-foundation.md`*
-1. `pyproject.toml` tool config (ruff, mypy, pytest) + `src/` package skeleton
-2. Typed config loader (`src/config.py`) from env with safe defaults + `src/logging_utils.py`
-3. Shared errors + closed `reason_code` enum (`src/errors.py`)
-4. `Makefile` (`setup`, `check`, `test`, `fmt`, `clean`) wired to the tools
-5. Test harness (`tests/conftest.py`, `tests/fixtures/`) + smoke test; `make check` green
+### F02 · Bronze ingestion — *`F02-ingest.md`*
+1. DuckDB connection + `bronze_records` (raw payload preserved) + CSV/JSON/XML flattening
+2. `make ingest` + row counts reconcile with the F01 manifest
 
-### F01 · Synthetic dirty supplier feeds — *draft plan: `F01-dirty-data.md`*
-1. Seeded generator core + product taxonomy sample
-2. CSV feed (`acme_valves`) with injected defects
-3. JSON feed (`northwind_supply`) + XML feed (`pacific_pipe`)
-4. Defect manifest + determinism/reproducibility test
-5. `make data` target + docs
+### F03 · Data quality: contract, validate, quarantine — *`F03-quality.md`*
+1. Contract model + `contracts/supplier_contract.yaml`
+2. Validation rules emitting the 4 `reason_code`s
+3. `make quality` → `silver_products` + `quarantine_records` with `bronze = silver + quarantine`
 
-### F02 · Bronze ingestion & profiling — *draft plan: `F02-ingest-profile.md`*
-1. DuckDB connection helper + bronze schema (raw payload preserved)
-2. CSV/JSON/XML flattening to a common bronze record (semi-structured aware)
-3. Profiling: null rate, cardinality, distributions → report artifact
-4. `make ingest` / `make profile` + reconciliation test
+### F04 · Clean catalog (gold) — *`F04-gold.md`*
+1. Minimal normalization (units → inches/PSI, brand/category cleanup) → `gold_products`
+2. `make gold` + build `search_text`; completeness lift printed
 
-### F03 · Data contracts, validation & quarantine — *draft plan: `F03-quality-contracts.md`*
-1. Contract model + loader (`contracts/supplier_contract.yaml`)
-2. Rule engine (required/type/range/enum/unit) emitting `reason_code`s
-3. Quarantine table + `bronze = silver + quarantine` reconciliation
-4. Silver materialization
-5. `make quality` + tests against deliberately broken fixtures
+### F05 · AlloyDB + load + embeddings 🔴 — *`F05-alloydb.md`*
+1. `sql/01..03`: extensions, `products` schema, ScaNN + GIN + pg_trgm indexes
+2. `make db` + `make load`: upsert gold → AlloyDB, embeddings via Vertex AI
 
-### F04 · Quality scorecard & monitoring
-1. Per-supplier completeness/duplicate/validity scoring
-2. Run-history table + trend across runs
-3. Scorecard report artifact (markdown + CSV)
-4. Threshold alerting + tests
+### F06 · Hybrid search — *`F06-hybrid-search.md`*
+1. `sql/04_hybrid_search.sql` (vector + keyword, RRF `k=60`) + query routing (SKU vs text)
+2. `src/search/hybrid_search.py` + `make search` smoke
 
-### F05 · Normalization & standardization
-1. Unit parser (fractions, `"`, `in`, `mm`) → canonical inches/PSI
-2. Brand normalization (alias table + RapidFuzz)
-3. Taxonomy/category mapping to the controlled vocabulary
-4. Material / certification normalization
-5. `make enrich` (structured part) + tests
+### F07 · Streamlit search demo — *`F07-streamlit-demo.md`*
+1. One-page app: search box, metadata filters, results table, keyword-vs-hybrid toggle
 
-### F06 · LLM attribute extraction (Gemini)
-1. JSON-schema output contract + mockable Gemini adapter
-2. Extraction prompt + schema validation + per-attribute confidence
-3. `review_queue` for low-confidence attributes
-4. Precision/recall on a small labeled sample
-5. Offline mock tests (no network in CI)
+---
 
-### F07 · Deduplication
-1. Blocking keys (brand + category)
-2. Similarity scoring (RapidFuzz token/ratio)
-3. Deterministic merge policy + golden-record selection
-4. Near-duplicate fixture tests
+## Optional (not required for round 1)
 
-### F08 · Gold canonical catalog
-1. Gold schema (canonical model from `CONTEXT.md`) + materialization
-2. `search_text` construction
-3. Gold reconciliation + completeness-lift report
-4. `make gold` + tests
-
-### F09 · AlloyDB foundation 🔴
-1. `sql/01_extensions.sql` (`vector`, `alloydb_scann`, `google_ml_integration`, `pg_trgm`)
-2. `sql/02_schema.sql` (`products`, `doc_chunks`, `feedback`, `review_queue`, column comments)
-3. `sql/03_indexes.sql` (ScaNN, GIN `tsv`, `pg_trgm`, category)
-4. `sql/05_row_level_security.sql`
-5. Idempotent apply script; **apply to cloud is Tier C**
-
-### F10 · Load gold + embeddings 🔴
-1. Auth-Proxy connection adapter, config-guarded
-2. Idempotent upsert loader
-3. Embedding generation in SQL (batched, cost-capped, only where null/changed)
-4. Load verification (counts, null embeddings, RLS sanity)
-5. `make load` / `make embed`
-
-### F11 · Hybrid search & query routing
-1. `sql/04_hybrid_search.sql` (RRF, `k = 60`)
-2. Query classifier (SKU/part number vs natural language)
-3. `pg_trgm` fuzzy fallback for typos
-4. Metadata filters (brand, category, `lead_free`, material)
-5. Python search API + tests against a fake/recorded DB
-
-### F12 · Evaluation harness
-1. Golden query set (~50 labeled queries: exact SKU, typos, synonyms, NL)
-2. Metrics: Recall@k, MRR, NDCG@10
-3. Keyword vs vector vs hybrid runner
-4. Results table + report artifact (before/after enrichment)
-5. `make eval`
-
-### F13 · RAG assistant
-1. Doc ingestion + structure-aware chunking with metadata (sku, doc type, page)
-2. `doc_chunks` embeddings
-3. Hybrid retrieval for documents
-4. Grounded answer with citations + refusal on weak evidence
-5. Feedback + latency/token logging
-6. Mockable tests, including a refusal test
-
-### F14 · Streamlit app
-1. Search page (keyword vs vector vs hybrid side by side)
-2. RAG page with citations and refusal states
-3. Quality dashboard (scorecard, quarantine reasons, enrichment lift)
-4. `make app` + smoke test
-
-### F15 · Feedback & observability
-1. Feedback capture (thumbs up/down) into `feedback`
-2. Zero-result and latency monitoring
-3. Per-run metrics summary artifact
+See [`OPTIONAL.md`](./OPTIONAL.md): scorecard, Gemini extraction, dedupe, evaluation harness,
+RAG assistant, feedback loop. Build only if the core demo is solid and the human asks.
 
 ---
 
 ## Conventions
 
-- Feature ids are stable. Never renumber.
-- Amend a plan in place; never create `FNN-v2.md`.
-- Adding a feature, changing scope, or changing acceptance criteria is **Tier C** (needs the human).
-- Keep this file and the plan files in sync — the `implement`/`verify` skills read both.
+- Feature ids are stable. Amend a plan in place; never create `FNN-v2.md`.
+- Adding a feature or changing scope/acceptance criteria requires approval (`AGENTS.md` §4).
+- Keep this file and the plan files in sync — the implement skill reads both.

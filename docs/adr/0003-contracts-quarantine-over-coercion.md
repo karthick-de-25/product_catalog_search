@@ -3,7 +3,7 @@
 - **Status:** accepted
 - **Date:** 2026-10-21
 - **Deciders:** human
-- **Related:** `docs/plan/F03-quality-contracts.md`, `CONTEXT.md` invariants 1–2
+- **Related:** `docs/plan/F03-quality.md`, `CONTEXT.md` invariants 1–2
 
 ## Context
 Supplier feeds are inconsistent and often wrong. The tempting shortcut is to coerce values

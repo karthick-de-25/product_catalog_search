@@ -144,7 +144,7 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
   `PY` falls back to `python3`; targets that need installed tools fail fast through
   `require-venv` with a clear message (exit 2) instead of a confusing ImportError.
   Verification fix: `make setup` is idempotent — `uv venv --allow-existing` so re-running
-  does not fail when `.venv` already exists (found during `/skill:verify F00`).
+  does not fail when `.venv` already exists (found during F00 verification).
 
 ### Slice 5 — Baseline verification & docs
 - **Status:** `[x]`
@@ -165,7 +165,7 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
   namespace package pre-registered by a `google-cloud-aiplatform` `.pth`, so the isolation
   test compares `sys.modules` before/after instead of globally; and replacing
   `socket.socket` breaks `ssl`, so outbound calls are blocked via a `sys.addaudithook`.
-  Update ROADMAP F00 to `done` only after `/skill:verify F00` passes.
+  Update ROADMAP F00 to `done` only after final verification.
 
 ---
 
@@ -214,6 +214,14 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 - 2026-10-21 — [Tier B] `/skill:verify F00` PASS with one gap fixed in scope: `make setup`
   was not repeatable (`uv venv` fails on an existing `.venv`); added `--allow-existing`.
   Re-ran `make setup` twice (both exit 0) and `make check` (18 passed). F00 marked done.
+
+---
+
+- 2026-10-21 — [round-1 simplification] Lightened the gate: `make check` is now ruff + pytest
+  (mypy optional via `make typecheck`); removed `tests/test_isolation.py`,
+  `tests/test_smoke.py`, `tests/test_logging_utils.py`; reduced `ReasonCode` 8 → 4. Suite is
+  now 5 focused tests. AC4/AC5 isolation tests were judged over-engineered for a demo and are
+  no longer gated.
 
 ---
 

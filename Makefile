@@ -48,16 +48,15 @@ fmt: require-venv ## Auto-format and fix lint
 lint: require-venv ## Lint without modifying files
 	$(RUFF) check .
 
-typecheck: require-venv ## Static type check (mypy, strict)
+typecheck: require-venv ## Static type check (mypy, optional — not part of `check`)
 	$(MYPY) src
 
 test: require-venv ## Run the test suite
 	$(PY) -m pytest
 
-check: require-venv ## Full gate: lint + format check + types + tests
+check: require-venv ## Full gate: lint + format check + tests
 	$(RUFF) check .
 	$(RUFF) format --check .
-	$(MYPY) src
 	$(PY) -m pytest -q
 
 clean: ## Remove caches and build artifacts (never data/)

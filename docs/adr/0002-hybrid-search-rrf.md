@@ -3,7 +3,7 @@
 - **Status:** accepted
 - **Date:** 2026-10-21
 - **Deciders:** human
-- **Related:** `docs/plan/F11-hybrid-search.md`, `sql/04_hybrid_search.sql`
+- **Related:** `docs/plan/F06-hybrid-search.md`, `sql/04_hybrid_search.sql`
 
 ## Context
 Contractors search in two very different ways: natural language (*"3/4 inch brass ball valve

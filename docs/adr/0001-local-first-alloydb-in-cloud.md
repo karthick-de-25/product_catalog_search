@@ -3,7 +3,7 @@
 - **Status:** accepted
 - **Date:** 2026-10-21
 - **Deciders:** human
-- **Related:** `README.md`, `docs/plan/F09-alloydb-foundation.md`
+- **Related:** `README.md`, `docs/plan/F05-alloydb.md`
 
 ## Context
 The project must demonstrate production-grade data engineering (quality, enrichment, hybrid
@@ -24,7 +24,7 @@ Use **AlloyDB for PostgreSQL on GCP** for the serving layer only: vectors, `tsve
   the pipeline is reproducible offline and fully testable in CI.
 - **Negative / trade-offs:** local layers are a stand-in, so scale characteristics differ;
   cloud behavior (auth, RLS, index tuning) is only exercised on GCP.
-- **Follow-ups:** F09/F10 are Tier C (cost + credentials). Keep the AlloyDB cluster small and
+- **Follow-ups:** F05 is a critical change (cost + credentials). Keep the AlloyDB cluster small and
   stop/delete it when idle. Document the production mapping (GCS/BigQuery/Dataflow/Dataplex).
 
 ## Alternatives considered

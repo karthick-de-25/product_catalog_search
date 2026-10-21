@@ -20,37 +20,35 @@ An end-to-end data engineering project that turns messy multi-supplier product f
 
 ## Development workflow (humans + AI agents)
 
-This repo is set up to be built **feature by feature, in vertical slices**, mostly by an AI
-agent, with human approval only at gates that matter.
+This repo is built **feature by feature, in vertical slices**, mostly by an AI agent, with human
+approval only at gates that matter. **Round 1 focuses on data quality + hybrid search**;
+everything else is optional ([`docs/plan/OPTIONAL.md`](./docs/plan/OPTIONAL.md)).
 
-- **[`AGENTS.md`](./AGENTS.md)** — the binding contract: golden rules, approval policy
-  (🟢 autonomous / 🟡 announce / 🔴 stop-and-ask), conventions, definition of done.
-- **[`CONTEXT.md`](./CONTEXT.md)** — domain glossary, canonical product model, invariants,
-  and the closed set of quarantine reason codes.
-- **[`docs/plan/ROADMAP.md`](./docs/plan/ROADMAP.md)** — every feature (F00–F15), dependencies,
-  and status. **This is the source of truth for delivery order.**
-- **[`docs/plan/`](./docs/plan)** — one plan file per feature, sliced end-to-end, each with
-  acceptance criteria and a test. [`TEMPLATE.md`](./docs/plan/TEMPLATE.md) shows the shape.
-- **[`docs/adr/`](./docs/adr)** — architecture decision records.
-- **[`docs/agents/README.md`](./docs/agents/README.md)** — how the agent skills/subagents are wired.
+- **[`AGENTS.md`](./AGENTS.md)** — the binding contract: critical-only approval, light testing
+  policy, conventions.
+- **[`CONTEXT.md`](./CONTEXT.md)** — domain glossary, canonical product model, invariants, and
+  the 4 quarantine reason codes.
+- **[`docs/plan/ROADMAP.md`](./docs/plan/ROADMAP.md)** — the core feature list (F00–F07) and status.
+- **[`docs/plan/`](./docs/plan)** — one short plan per feature (≤3 slices, one test each).
+- **[`docs/adr/`](./docs/adr)** and **[`docs/agents/README.md`](./docs/agents/README.md)**.
 
 The loop:
 
 ```
-/skill:plan FNN  →  human: "approve FNN"  →  /skill:implement FNN  →  /skill:verify FNN
+/skill:plan FNN  →  human: "approve FNN"  →  /skill:implement FNN  →  done
 ```
 
-1. **Plan** — the agent scopes the feature into vertical slices and writes
-   `docs/plan/FNN-*.md`, then **stops for your approval**.
-2. **Approve** — you review scope, slices, and any 🔴 critical items. One approval, not per-slice.
-3. **Implement** — the agent builds slice by slice, tests each one, and keeps `make check`
-   green. It only stops mid-flight for critical changes (cloud/GCP, cost, destructive ops,
-   secrets, breaking contracts/interfaces, new dependencies, scope changes).
-4. **Verify** — the agent reproduces evidence against the acceptance criteria and marks the
-   feature done.
+1. **Plan** — the agent outlines ≤3 vertical slices in `docs/plan/FNN-*.md` and **stops**.
+2. **Approve** — you review scope and any 🔴 critical items. One approval, not per-slice.
+3. **Implement** — the agent builds slice by slice with one happy-path test each and keeps
+   `make check` green. It stops mid-flight only for critical changes (cloud/GCP, cost,
+   destructive ops, secrets, scope/contract changes).
 
-Current state: **F00 (Foundation) is planned and awaiting approval.** Run `/skill:plan F00` to
-review it, or `/skill:status` for a progress snapshot.
+`make check` is deliberately light: `ruff` + `pytest` (mypy is optional). There is no separate
+verification ceremony.
+
+Current state: **F00 (Foundation) is done; F01 (dirty supplier feeds) is planned.** Run
+`/skill:plan F01` to review it, or `/skill:status` for a progress snapshot.
 
 ---
 
@@ -124,46 +122,35 @@ To keep it simple (no Docker, no orchestration platform), everything runs on you
 
 ```
 product-catalog-intelligence/
-├── README.md
-├── Makefile
-├── requirements.txt
-├── .env.example
+├── README.md · AGENTS.md · CONTEXT.md · Makefile · pyproject.toml
+├── requirements.txt · .env.example
+├── .pi/                              # agent skills + subagents
 ├── contracts/
 │   └── supplier_contract.yaml        # data contract per supplier feed
-├── data/
+├── data/                             # git-ignored artifacts
 │   ├── raw/                          # generated dirty supplier feeds
-│   ├── silver/
-│   ├── gold/
-│   └── docs/                         # sample PDF spec sheets
+│   ├── silver/  gold/  quarantine/   # quality pipeline outputs
+│   └── reports/
 ├── sql/
 │   ├── 01_extensions.sql
 │   ├── 02_schema.sql
 │   ├── 03_indexes.sql
-│   ├── 04_hybrid_search.sql
-│   └── 05_row_level_security.sql
+│   └── 04_hybrid_search.sql          # vector + keyword, RRF
 ├── src/
-│   ├── generate/make_dirty_data.py   # synthetic supplier feeds with injected errors
-│   ├── ingest/load_bronze.py
-│   ├── quality/
-│   │   ├── profile.py
-│   │   ├── validate.py               # rules + quarantine + reason codes
-│   │   └── scorecard.py              # per-supplier quality score
-│   ├── enrichment/
-│   │   ├── normalize.py              # units, brand matching, taxonomy
-│   │   ├── extract_attributes.py     # Gemini → JSON schema output
-│   │   └── dedupe.py                 # near-duplicate detection
-│   ├── load/load_alloydb.py
+│   ├── config.py · errors.py · logging_utils.py
+│   ├── generate/make_dirty_data.py   # synthetic dirty feeds
+│   ├── ingest/load_bronze.py         # raw → DuckDB bronze
+│   ├── quality/                      # contract · validate · quarantine
+│   ├── enrichment/normalize.py       # units, brand, category → gold
+│   ├── load/load_alloydb.py          # gold → AlloyDB + embeddings
 │   ├── search/hybrid_search.py       # query routing + RRF
-│   ├── rag/
-│   │   ├── ingest_docs.py            # chunking + embeddings
-│   │   └── answer.py                 # retrieval + Gemini with citations
-│   ├── eval/
-│   │   ├── golden_queries.csv
-│   │   └── evaluate_search.py
 │   └── app/streamlit_app.py
-└── docs/
-    └── architecture.png
+├── tests/                            # one focused test per slice
+└── docs/{plan/, adr/, agents/}
 ```
+
+> Optional, post-round-1 modules (scorecard, Gemini extraction, dedupe, evaluation, RAG,
+> feedback) are listed in [`docs/plan/OPTIONAL.md`](./docs/plan/OPTIONAL.md).
 
 ---
 
@@ -281,20 +268,22 @@ For the AI-agent build workflow, see [`AGENTS.md`](./AGENTS.md) and
 ## How to run (step by step)
 
 ```bash
-make data        # 1. generate dirty supplier feeds
-make ingest      # 2. load raw feeds into DuckDB (bronze)
-make quality     # 3. profile, validate, quarantine, scorecard
-make enrich      # 4. normalize, Gemini extraction, dedupe
-make db          # 5. create AlloyDB schema, extensions, indexes
-make load        # 6. load gold products into AlloyDB
-make embed       # 7. generate embeddings inside AlloyDB
-make eval        # 8. compare keyword vs vector vs hybrid
-make app         # 9. launch Streamlit (search + RAG + quality dashboard)
+make data     # 1. generate dirty supplier feeds
+make ingest   # 2. raw feeds → DuckDB bronze
+make quality  # 3. contract + validate → silver + quarantine
+make gold     # 4. normalize → clean catalog
+make db       # 5. create AlloyDB schema + indexes    (🔴 critical)
+make load     # 6. load gold + generate embeddings     (🔴 critical)
+make app      # 7. launch the Streamlit hybrid-search demo
 ```
 
 ---
 
 ## Module details
+
+> The core path is **data quality** (contract → validate → quarantine) and **hybrid search**.
+> Sections below that describe Gemini extraction, deduplication, evaluation, RAG, or scorecards
+> are **optional** post-round-1 ideas — see [`docs/plan/OPTIONAL.md`](./docs/plan/OPTIONAL.md).
 
 ### 1. Data quality, profiling, monitoring and governance
 

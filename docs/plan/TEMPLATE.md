@@ -1,56 +1,34 @@
 ---
 feature: FNN
-title: <Short feature title>
-status: proposed          # proposed | approved | in-progress | blocked | done
-owner: agent
-approved:                 # YYYY-MM-DD, set only by the human
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
+title: <Short title>
+status: proposed          # proposed | approved | in-progress | done | blocked
+approved:                 # YYYY-MM-DD — set by the human only
 depends_on: []
 ---
 
-# FNN — <Feature title>
+# FNN — <Title>
 
-## Goal
-One sentence describing the user-visible outcome.
+**Goal:** one sentence describing the observable outcome.
+**Non-goals:** what this deliberately does *not* build.
 
-## Why now
-What it unblocks, and how it fits the delivery order.
+## Slices (≤3)
 
-## Scope
-- In scope: …
-- Non-goals: …
+### Slice 1 — <name>   `[ ]`
+- **In → out:** <input> → <observable output>
+- **Files:** `src/...`, `tests/...`
+- **Test:** one happy-path test that proves the slice works
+- **Critical actions:** `none` (or 🔴 exact command + cost/blast radius)
+- **Done when:** <1–3 concrete checks>
 
-## Assumptions
-- [ ] <assumption> — verify by <how>
+### Slice 2 — <name>   `[ ]`
+- **In → out:** …
+- **Files:** …
+- **Test:** …
+- **Critical actions:** …
+- **Done when:** …
 
-## Open questions (needs human)
-- <question, or "none">
-
-## Acceptance criteria (feature-level)
-- [ ] AC1: <observable, testable statement>
-- [ ] AC2: …
-
----
-
-## Slices
-
-> Each slice must be vertical (input → output → observable result), independently testable,
-> and leave `make check` green. Copy the slice block per slice.
-
-### Slice N — <name>
-- **Status:** `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked
-- **Tier:** 🟢 autonomous / 🟡 announce / 🔴 needs approval
-- **Inputs:** <files/tables/args>
-- **Outputs:** <artifacts/rows/API>
-- **Files:** `path/to/file.py`, `sql/xx.sql`
-- **Acceptance criteria:**
-  - [ ] <specific, observable>
-- **Test:** `tests/...::test_...` — asserts <what>
-- **Tier C actions (if any):** <exact command + blast radius, or "none">
-- **Notes:** <gotchas, links to ADRs>
-
----
+## Acceptance (feature-level)
+- [ ] <observable, testable>
 
 ## Commands
 ```bash
@@ -58,13 +36,5 @@ make check
 make <target>
 ```
 
-## Risks
-- <risk> → <mitigation>
-
-## Rollback
-How to undo this feature if it lands badly (files to revert, tables to drop — Tier C).
-
----
-
 ## Log
-- YYYY-MM-DD — plan created.
+- <date> — plan created (proposed).
