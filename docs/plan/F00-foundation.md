@@ -108,16 +108,16 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
 - **Notes:** Follow `CONTEXT.md` — cloud/network calls must be opt-in.
 
 ### Slice 3 — Shared errors & reason codes
-- **Status:** `[ ]`
+- **Status:** `[x]`
 - **Tier:** 🟢
 - **Inputs:** `CONTEXT.md` "Reason codes" table
 - **Outputs:** `src/errors.py` with `ReasonCode` (closed enum), `DataQualityError`,
   `ContractError`, `ConfigError`, and a `PipelineError` base
 - **Files:** `src/errors.py`, `tests/test_errors.py`
 - **Acceptance criteria:**
-  - [ ] `ReasonCode` values exactly match `CONTEXT.md` (8 codes) — no extras, none missing.
-  - [ ] Errors carry structured context (e.g. `sku`, `field`, `reason_code`).
-  - [ ] A test parses `CONTEXT.md` and asserts the enum matches (guards against drift).
+  - [x] `ReasonCode` values exactly match `CONTEXT.md` (8 codes) — no extras, none missing.
+  - [x] Errors carry structured context (e.g. `sku`, `field`, `reason_code`).
+  - [x] A test parses `CONTEXT.md` and asserts the enum matches (guards against drift).
 - **Test:** `tests/test_errors.py::test_reason_codes_match_context` — parses `CONTEXT.md`.
 - **Tier C actions:** none
 - **Notes:** Reason codes are a closed set; changing them is Tier C.
@@ -191,6 +191,9 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 - 2026-10-21 — slice 2 "Typed configuration & logging": `src/config.py` (pydantic-settings,
   cloud off by default, `redacted()`), `src/logging_utils.py` (idempotent `configure_logging`,
   `get_logger`); `python -m src.config` prints redacted JSON; all checks green (7 tests).
+- 2026-10-21 — slice 3 "Shared errors & reason codes": `src/errors.py` (`ReasonCode` StrEnum,
+  `PipelineError` + `ConfigError`/`ContractError`/`DataQualityError`), drift test parses
+  `CONTEXT.md`; all checks green (12 tests).
 - 2026-10-21 — scouted environment; fixed two plan defects: tooling requires `.venv`
   (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so Slice 1
   now ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.
