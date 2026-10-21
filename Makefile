@@ -64,3 +64,10 @@ clean: ## Remove caches and build artifacts (never data/)
 	find . -type d -name '__pycache__' -not -path './$(VENV)/*' -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -not -path './$(VENV)/*' -delete
 	@echo "clean complete"
+
+# --------------------------------------------------------------------------
+# Pipeline targets — added by the feature that implements them (FNN). No stubs.
+# --------------------------------------------------------------------------
+
+data: require-venv ## Generate synthetic dirty supplier feeds (F01)
+	$(PY) -m src.generate.make_dirty_data
