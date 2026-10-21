@@ -77,3 +77,6 @@ ingest: require-venv ## Raw feeds → DuckDB bronze (F02)
 
 quality: require-venv ## Validate → silver + quarantine (F03)
 	$(PY) -m src.quality.validate
+
+gold: require-venv ## Normalize → gold catalog (F04)
+	$(PY) -m src.enrichment.gold
