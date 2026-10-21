@@ -5,16 +5,19 @@
 
 - `O1` — done (see `O01-scorecard.md`).
 
-## Recommended order (analysis, 2026-10-21)
+## Recommended order (analysis, 2026-10-21; updated 2026-10-21)
 
-| Pri | Item | Status | Why now | Cost |
+Done: P0 keyword fix (F04), O1 scorecard. Remaining backlog, ranked by value/effort:
+
+| Pri | Item | Status | Why | Cost |
 |---|---|---|---|---|
-| P0 | Keyword tokenizer fix (`search_text` underscores → spaces + reload) | **done** | keyword column was always empty (underscore fused tokens); fixed 2026-10-21 | tiny code + 1 🔴 cloud UPDATE (approved) |
-| P1 | O4 Evaluation harness | todo | proves "hybrid beats keyword" with numbers (Recall@10 / MRR / NDCG) | offline |
-| P1 | O1 Quality scorecard | **done** | gives the data-quality pillar per-supplier numbers | offline |
-| P2 | O3 Dedupe | todo | better catalog → better scores/search | offline |
-| P3 | O2 Gemini extraction / O5 RAG | todo | wow factor; cloud cost + more tests | high |
-| P4 | O6 Feedback | todo | after the demo exists | low |
+| P1 | O4 Evaluation harness | todo | proves hybrid > keyword > vector with Recall@10 / MRR / NDCG on a fair baseline (P0 fixed) | offline |
+| P2 | O3 Dedupe | todo | better catalog → better search + scorecards; do before final eval baseline | offline |
+| P3 | O2 Gemini extraction | todo | close the README's enrichment gap (JSON-schema output, confidence, review queue) | medium, LLM $ |
+| P3 | O5 RAG assistant | todo | biggest wow (citations + refusal); most effort, real Vertex AI usage | high |
+| P4 | O6 Feedback | todo | only pays off once the demo is used repeatedly | low |
+
+Quick win: add a `make demo` target (one command: data → ingest → quality → gold → scorecard).
 
 ## Ideas
 
