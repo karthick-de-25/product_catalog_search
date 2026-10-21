@@ -74,3 +74,6 @@ data: require-venv ## Generate synthetic dirty supplier feeds (F01)
 
 ingest: require-venv ## Raw feeds → DuckDB bronze (F02)
 	$(PY) -m src.ingest.load_bronze
+
+quality: require-venv ## Validate → silver + quarantine (F03)
+	$(PY) -m src.quality.validate

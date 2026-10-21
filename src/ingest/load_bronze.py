@@ -92,6 +92,7 @@ def _records_xml(path: Path) -> list[tuple[dict[str, object], list[str]]]:
     for part in root.findall("part"):
         payload = {
             "partNo": part.get("partNo", ""),
+            "product": part.get("product", ""),
             **{child.tag: (child.text or "") for child in part},
         }
         texts = {child.tag: (child.text or "") for child in part}

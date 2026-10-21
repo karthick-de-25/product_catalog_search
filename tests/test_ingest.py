@@ -86,6 +86,10 @@ def test_raw_payload_round_trips(tmp_path: Path) -> None:
     # XML: payload holds partNo + every child element's text.
     part = ET.parse(raw / "pacific_pipe.xml").getroot().findall("part")[0]
     payload = stored_json("pacific_pipe.xml")
-    expected = {"partNo": part.get("partNo"), **{c.tag: (c.text or "") for c in part}}
+    expected = {
+        "partNo": part.get("partNo"),
+        "product": part.get("product", ""),
+        **{c.tag: (c.text or "") for c in part},
+    }
     assert payload == expected
     conn.close()

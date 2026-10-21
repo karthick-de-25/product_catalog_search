@@ -1,0 +1,53 @@
+# Data quality — supplier feeds. YAML anchors keep the field specs DRY across suppliers.
+# `mapping` tells the validator where each canonical logical field lives inside a feed's
+# raw_payload (dotted paths for nested JSON).
+
+x-common-fields: &common-fields
+  sku:          {type: string}
+  name:         {type: string}
+  brand:        {type: string}
+  category:     {type: string, allowed: [ball_valves, gate_valves, check_valves, pipe, fittings]}
+  size_raw:     {type: string}
+  material:     {type: string, allowed: [brass, bronze, pvc, copper, stainless]}
+  pressure_psi: {type: integer, min: 0, max: 600}
+  lead_free:    {type: boolean}
+
+suppliers:
+  acme_valves:
+    required: [sku, name, brand, category, material]
+    fields: *common-fields
+    mapping:
+      sku: sku
+      name: name
+      brand: brand
+      category: category
+      size_raw: size
+      material: material
+      pressure_psi: pressure
+      lead_free: lead_free
+
+  northwind_supply:
+    required: [sku, name, brand, category, material]
+    fields: *common-fields
+    mapping:
+      sku: id
+      name: title
+      brand: vendor
+      category: category
+      size_raw: attributes.size
+      material: attributes.material
+      pressure_psi: attributes.pressure
+      lead_free: lead_free
+
+  pacific_pipe:
+    required: [sku, name, brand, category, material]
+    fields: *common-fields
+    mapping:
+      sku: partNo
+      name: product
+      brand: brand
+      category: category
+      size_raw: size
+      material: material
+      pressure_psi: pressure
+      lead_free: lead_free
