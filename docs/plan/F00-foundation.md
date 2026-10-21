@@ -145,21 +145,25 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
   `require-venv` with a clear message (exit 2) instead of a confusing ImportError.
 
 ### Slice 5 — Baseline verification & docs
-- **Status:** `[ ]`
+- **Status:** `[x]`
 - **Tier:** 🟢
 - **Inputs:** Slices 1–4
 - **Outputs:** a smoke test, an import-isolation test, fixture scaffolding, updated roadmap
 - **Files:** `tests/test_smoke.py`, `tests/test_isolation.py`, `tests/fixtures/.gitkeep`,
   `docs/plan/ROADMAP.md`
 - **Acceptance criteria:**
-  - [ ] `get_settings()` returns documented defaults with an empty environment.
-  - [ ] Importing every `src` module opens no socket and imports no cloud/app dependency
+  - [x] `get_settings()` returns documented defaults with an empty environment.
+  - [x] Importing every `src` module opens no socket and imports no cloud/app dependency
         (satisfies AC4/AC5).
-  - [ ] `tests/fixtures/.gitkeep` exists; `data/` is git-ignored except `.gitkeep`s.
-  - [ ] `make check` green from a clean checkout.
+  - [x] `tests/fixtures/.gitkeep` exists; `data/` is git-ignored except `.gitkeep`s.
+  - [x] `make check` green from a clean checkout.
 - **Test:** `tests/test_smoke.py` + `tests/test_isolation.py`.
 - **Tier C actions:** none
-- **Notes:** Update ROADMAP F00 → `done` only after this slice passes.
+- **Notes:** Two test defects were found and fixed during this slice: `google.cloud` is a
+  namespace package pre-registered by a `google-cloud-aiplatform` `.pth`, so the isolation
+  test compares `sys.modules` before/after instead of globally; and replacing
+  `socket.socket` breaks `ssl`, so outbound calls are blocked via a `sys.addaudithook`.
+  Update ROADMAP F00 to `done` only after `/skill:verify F00` passes.
 
 ---
 
@@ -199,6 +203,9 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 - 2026-10-21 — [Tier B] slice 4 "Makefile dev loop": added `Makefile` (help/setup/fmt/lint/
   typecheck/test/check/clean, venv-aware with `require-venv` guard) and a README
   "Development (local, no cloud)" section; `make check` green (12 tests).
+- 2026-10-21 — slice 5 "Baseline verification & docs": added `tests/test_smoke.py` and
+  `tests/test_isolation.py`; verified fixtures tracked and `data/` ignored; `make check`
+  green (18 tests). Ready for `/skill:verify F00`.
 - 2026-10-21 — scouted environment; fixed two plan defects: tooling requires `.venv`
   (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so Slice 1
   now ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.
