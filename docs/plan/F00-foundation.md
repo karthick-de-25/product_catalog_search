@@ -89,18 +89,19 @@ does not exist yet; from Slice 4 onward, "green" means `make check` is green.
   `tests/conftest.py` may start empty; it exists so later fixtures have a home.
 
 ### Slice 2 — Typed configuration & logging
-- **Status:** `[ ]`
+- **Status:** `[x]`
 - **Tier:** 🟢
 - **Inputs:** env vars documented in `.env.example`
 - **Outputs:** `src/config.py` (`Settings` dataclass/pydantic model + `get_settings()`),
   `src/logging_utils.py` (`configure_logging`, module logger factory)
-- **Files:** `src/config.py`, `src/logging_utils.py`, `tests/test_config.py`
+- **Files:** `src/config.py`, `src/logging_utils.py`, `tests/test_config.py`,
+  `tests/test_logging_utils.py`
 - **Acceptance criteria:**
-  - [ ] All config comes from env with documented defaults; no secrets hard-coded.
-  - [ ] Cloud features are off by default (`ENABLE_CLOUD=false`); `GCP_PROJECT` optional.
-  - [ ] A `redacted()` view hides secrets (e.g. `PGPASSWORD`) for logging.
-  - [ ] `python -m src.config` prints the redacted settings as JSON and exits 0.
-  - [ ] Missing required local paths do not raise at import time.
+  - [x] All config comes from env with documented defaults; no secrets hard-coded.
+  - [x] Cloud features are off by default (`ENABLE_CLOUD=false`); `GCP_PROJECT` optional.
+  - [x] A `redacted()` view hides secrets (e.g. `PGPASSWORD`) for logging.
+  - [x] `python -m src.config` prints the redacted settings as JSON and exits 0.
+  - [x] Missing required local paths do not raise at import time.
 - **Test:** `tests/test_config.py::test_defaults_and_redaction` — defaults apply;
   `redacted()` masks the password; env override wins (via `monkeypatch`).
 - **Tier C actions:** none
@@ -187,6 +188,9 @@ Revert `pyproject.toml`, `src/`, `tests/`, `Makefile`; nothing here is destructi
 - 2026-10-21 — slice 1 "Package skeleton & tooling config": added `pyproject.toml`
   (ruff/mypy/pytest/pydantic plugin), `src/__init__.py`, `tests/` package + import test;
   `ruff check`, `ruff format --check`, `mypy src`, `pytest` all exit 0 (1 test).
+- 2026-10-21 — slice 2 "Typed configuration & logging": `src/config.py` (pydantic-settings,
+  cloud off by default, `redacted()`), `src/logging_utils.py` (idempotent `configure_logging`,
+  `get_logger`); `python -m src.config` prints redacted JSON; all checks green (7 tests).
 - 2026-10-21 — scouted environment; fixed two plan defects: tooling requires `.venv`
   (`ruff`/`mypy` absent from system PATH), and `pytest` exits 5 with zero tests, so Slice 1
   now ships one trivial test; tightened AC4 and Slice 4/5 acceptance criteria.
