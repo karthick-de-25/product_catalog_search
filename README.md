@@ -4,7 +4,7 @@ An end-to-end **demo**: turn messy multi-supplier product feeds (CSV/JSON/XML) i
 enriched catalog, then serve **hybrid search** (semantic vector + keyword) from AlloyDB for
 PostgreSQL — with a Streamlit UI on top.
 
-> **Scenario:** a PVF/HVAC/plumbing distributor gets data from thousands of suppliers in every
+> **Scenario:** a distributor gets data from thousands of suppliers in every
 > possible shape. Contractors search with vague phrases (*"3/4 inch brass ball valve lead free"*)
 > or paste part numbers. Bad data means bad search and lost sales.
 
@@ -131,9 +131,8 @@ rankings with Reciprocal Rank Fusion (`sql/04_hybrid_search.sql`, k=60), so a pr
 
 ## Scale reality check — the client's real-world volume
 
-The scenario says "thousands of suppliers"; the demo runs **3 suppliers / 240 rows**. What a
-largest-in-US PVF/plumbing distributor actually pushes through this pipeline (Ferguson-scale:
-≈$30B revenue, 2M+ SKUs):
+The scenario says "thousands of suppliers"; the demo runs **3 suppliers / 240 rows**. What a a
+distributor actually pushes through this pipeline :
 
 | Dimension | Realistic scale | Demo today |
 |---|---|---|
@@ -145,7 +144,7 @@ largest-in-US PVF/plumbing distributor actually pushes through this pipeline (Fe
 | Quarantine per cycle @ ~18% | 200–500K rows | 43 |
 | Embedding runs (cap 500 rows) | 2,000–6,000 runs per full pass | 1 |
 
-*(Industry-typical figures for the largest US distributors — the README pins only "thousands of
+*(Industry-typical figures for the prouction — the README pins only "thousands of
 suppliers"; nothing above is a repo guarantee.)*
 
 ### What breaks at that scale — and which feature fixes it
